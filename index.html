@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Voting System - GitHub Pages Edition</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="static/css/style.css">
+    <style>
+        /* Single Page Application View Management */
+        .spa-view {
+            display: none;
+            animation: fadeIn 0.25s ease-in-out;
+        }
+        .spa-view.active {
+            display: block;
+        }
+        .portal-switch-tabs {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            gap: 4px;
+        }
+        .portal-tab-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px 12px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            transition: all 0.15s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .portal-tab-btn.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+        .github-badge {
+            background: #24292f;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: var(--radius-full);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .btn-reset-db {
+            background: transparent;
+            border: 1px dashed var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 0.3rem 0.65rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        .btn-reset-db:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: var(--danger-light);
+        }
+        .cursor-pointer {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header & Navigation -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="javascript:void(0)" onclick="app.navigate('polls')" class="nav-brand">
+                <i class="fa-solid fa-check-to-slot brand-icon"></i>
+                <span class="brand-text">VoteSphere</span>
+                <span class="github-badge"><i class="fa-brands fa-github"></i> GitHub Pages</span>
+            </a>
+
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" onclick="app.toggleMobileMenu()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <nav class="nav-menu" id="navMenu">
+                <ul class="nav-links">
+                    <li id="nav-item-polls" style="display:none;">
+                        <a href="javascript:void(0)" onclick="app.navigate('polls')" class="nav-link" id="nav-link-polls">
+                            <i class="fa-solid fa-box-archive"></i> Polls & Ballots
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" onclick="app.navigate('results')" class="nav-link" id="nav-link-results">
+                            <i class="fa-solid fa-chart-simple"></i> Live Results
+                        </a>
+                    </li>
+                    <li id="nav-item-admin" style="display:none;">
+                        <a href="javascript:void(0)" onclick="app.navigate('admin')" class="nav-link nav-link-admin" id="nav-link-admin">
+                            <i class="fa-solid fa-shield-halved"></i> Admin Panel
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="nav-user-actions" id="navUserActions">
+                    <!-- Populated dynamically by JavaScript -->
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Flash Notification Alerts -->
+            <div class="flash-container" id="flashContainer"></div>
+
+            <!-- ========================================================= -->
+            <!-- VIEW 1: STUDENT LOGIN                                    -->
+            <!-- ========================================================= -->
+            <div id="view-login" class="spa-view active">
+                <div class="auth-wrapper">
+                    <div class="auth-card">
+                        <div class="portal-switch-tabs">
+                            <button type="button" class="portal-tab-btn active" onclick="app.navigate('login')">
+                                <i class="fa-solid fa-graduation-cap"></i> Student Portal
+                            </button>
+                            <button type="button" class="portal-tab-btn" onclick="app.navigate('admin-login')">
+                                <i class="fa-solid fa-shield-halved"></i> Admin Portal
+                            </button>
+                        </div>
+
+                        <div class="auth-header">
+                            <div class="auth-icon-circle">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <h2>Student Voter Sign In</h2>
+                            <p>Enter your Student ID and password to access the voting portal.</p>
+                        </div>
+
+                        <form class="auth-form" onsubmit="event.preventDefault(); app.handleLogin('voter');">
+                            <div class="form-group">
+                                <label for="login_student_id" class="form-label">Student ID</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-hashtag input-icon"></i>
+                                    <input type="text" id="login_student_id" class="form-control" placeholder="e.g., STU1001 or STU1002" required autofocus>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="login_password" class="form-label">Password</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-lock input-icon"></i>
+                                    <input type="password" id="login_password" class="form-control" placeholder="Your account password" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Vote
+                            </button>
+                        </form>
+
+                        <div class="auth-footer">
+                            <p>New student voter? <a href="javascript:void(0)" onclick="app.navigate('register')">Create an account</a></p>
+                            <p class="mt-2 text-muted" style="font-size: 0.85rem;">Election supervisor? <a href="javascript:void(0)" onclick="app.navigate('admin-login')">Switch to Admin Portal &rarr;</a></p>
+                        </div>
+
+                        <!-- Quick Demo Accounts -->
+                        <div class="demo-accounts-card">
+                            <div class="demo-header">
+                                <i class="fa-solid fa-laptop-code"></i>
+                                <span>Student Demo Accounts (Click to Fill)</span>
+                            </div>
+                            <div class="demo-buttons">
+                                <button type="button" class="btn-demo-pill" onclick="app.fillCredentials('STU1002', 'voter123')">
+                                    <span class="pill-role voter-pill">Student</span>
+                                    <span class="pill-id">STU1002</span>
+                                    <span class="pill-pw">(ready to vote)</span>
+                                </button>
+                                <button type="button" class="btn-demo-pill" onclick="app.fillCredentials('STU1001', 'voter123')">
+                                    <span class="pill-role voter-pill">Student</span>
+                                    <span class="pill-id">STU1001</span>
+                                    <span class="pill-pw">(already voted)</span>
+                                </button>
+                                <button type="button" class="btn-demo-pill" onclick="app.navigate('admin-login')">
+                                    <span class="pill-role admin-pill">Admin</span>
+                                    <span class="pill-id">ADMIN001</span>
+                                    <span class="pill-pw">(switch to admin portal &rarr;)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- VIEW 2: ADMIN LOGIN                                      -->
+            <!-- ========================================================= -->
+            <div id="view-admin-login" class="spa-view">
+                <div class="auth-wrapper">
+                    <div class="auth-card" style="border-top: 4px solid #7e22ce;">
+                        <div class="portal-switch-tabs">
+                            <button type="button" class="portal-tab-btn" onclick="app.navigate('login')">
+                                <i class="fa-solid fa-graduation-cap"></i> Student Portal
+                            </button>
+                            <button type="button" class="portal-tab-btn active" onclick="app.navigate('admin-login')">
+                                <i class="fa-solid fa-shield-halved"></i> Admin Portal
+                            </button>
+                        </div>
+
+                        <div class="auth-header">
+                            <div class="auth-icon-circle" style="background: #faf5ff; color: #7e22ce;">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <h2>Administrator Sign In</h2>
+                            <p>Enter administrator credentials to access the election control panel.</p>
+                        </div>
+
+                        <form class="auth-form" onsubmit="event.preventDefault(); app.handleLogin('admin');">
+                            <div class="form-group">
+                                <label for="admin_login_id" class="form-label">Admin ID</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-user-shield input-icon"></i>
+                                    <input type="text" id="admin_login_id" class="form-control" placeholder="e.g., ADMIN001" value="ADMIN001" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="admin_login_password" class="form-label">Admin Password</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-lock input-icon"></i>
+                                    <input type="password" id="admin_login_password" class="form-control" placeholder="Enter admin password" value="admin123" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-secondary btn-block" style="background:#7e22ce; color:#fff;">
+                                <i class="fa-solid fa-lock-open"></i> Sign In to Admin Panel
+                            </button>
+                        </form>
+
+                        <div class="demo-accounts-card">
+                            <div class="demo-header">
+                                <i class="fa-solid fa-laptop-code"></i>
+                                <span>Default Admin Account (1-Click Fill)</span>
+                            </div>
+                            <button type="button" class="btn-demo-pill" onclick="app.fillAdminCredentials('ADMIN001', 'admin123')">
+                                <span class="pill-role admin-pill">Admin</span>
+                                <span class="pill-id">ADMIN001</span>
+                                <span class="pill-pw">(password: admin123)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- VIEW 3: VOTER REGISTRATION                               -->
+            <!-- ========================================================= -->
+            <div id="view-register" class="spa-view">
+                <div class="auth-wrapper">
+                    <div class="auth-card">
+                        <div class="auth-header">
+                            <div class="auth-icon-circle">
+                                <i class="fa-solid fa-id-card"></i>
+                            </div>
+                            <h2>Register as a Student Voter</h2>
+                            <p>Create your student voting account with a unique ID.</p>
+                        </div>
+
+                        <form class="auth-form" onsubmit="event.preventDefault(); app.handleRegister();">
+                            <div class="form-group">
+                                <label for="reg_name" class="form-label">Full Name *</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-regular fa-user input-icon"></i>
+                                    <input type="text" id="reg_name" class="form-control" placeholder="e.g., David Miller" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg_student_id" class="form-label">Student ID *</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-hashtag input-icon"></i>
+                                    <input type="text" id="reg_student_id" class="form-control" placeholder="e.g., STU2050" required>
+                                </div>
+                                <small class="form-hint">Used as your unique sign in credential across all elections.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg_password" class="form-label">Password *</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-lock input-icon"></i>
+                                    <input type="password" id="reg_password" class="form-control" placeholder="At least 6 characters" minlength="6" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg_confirm_password" class="form-label">Confirm Password *</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-shield-halved input-icon"></i>
+                                    <input type="password" id="reg_confirm_password" class="form-control" placeholder="Re-enter password" minlength="6" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fa-solid fa-user-plus"></i> Complete Registration
+                            </button>
+                        </form>
+
+                        <div class="auth-footer">
+                            <p>Already registered? <a href="javascript:void(0)" onclick="app.navigate('login')">Sign In here</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- VIEW 4: POLLS LISTING                                    -->
+            <!-- ========================================================= -->
+            <div id="view-polls" class="spa-view">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title"><i class="fa-solid fa-box-archive"></i> Campus Elections</h1>
+                        <p class="page-subtitle">Review active elections, explore candidate platforms, and cast your official ballot.</p>
+                    </div>
+                </div>
+
+                <div class="polls-grid" id="pollsGrid">
+                    <!-- Populated dynamically by JavaScript -->
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- VIEW 5: BALLOT VOTING                                    -->
+            <!-- ========================================================= -->
+            <div id="view-ballot" class="spa-view">
+                <div class="ballot-wrapper">
+                    <div class="ballot-breadcrumb">
+                        <a href="javascript:void(0)" onclick="app.navigate('polls')" class="back-link">
+                            <i class="fa-solid fa-arrow-left"></i> Back to all elections
+                        </a>
+                    </div>
+
+                    <div class="ballot-header-card" id="ballotHeaderCard">
+                        <!-- Populated dynamically by JavaScript -->
+                    </div>
+
+                    <form id="spaBallotForm" onsubmit="event.preventDefault(); app.handleCastVote();">
+                        <div class="candidates-grid" id="ballotCandidatesGrid">
+                            <!-- Populated dynamically by JavaScript -->
+                        </div>
+
+                        <div class="ballot-submit-bar" id="ballotSubmitBar">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBallotBtn">
+                                <i class="fa-solid fa-check-to-slot"></i> Confirm & Cast Ballot
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- VIEW 6: LIVE RESULTS                                     -->
+            <!-- ========================================================= -->
+            <div id="view-results" class="spa-view">
+                <div class="results-page">
+                    <div class="page-header results-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-chart-column"></i> Election Results</h1>
+                            <p class="page-subtitle">Real-time vote tallies and candidate standing across campus elections.</p>
+                        </div>
+
+                        <div class="poll-selector-wrapper">
+                            <label for="resultsPollSelect" class="form-label mb-1">Select Election:</label>
+                            <select id="resultsPollSelect" class="form-control poll-select" onchange="app.renderResults(parseInt(this.value))">
+                                <!-- Populated dynamically by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid mb-4" id="resultsStatsGrid">
+                        <!-- Populated dynamically by JavaScript -->
+                    </div>
+
+                    <div class="results-card">
+                        <div class="results-card-header">
+                            <h2>Candidate Standings</h2>
+                            <span class="text-muted" id="resultsTotalSubtitle">Total: 0 votes</span>
+                        </div>
+                        <div class="results-list" id="resultsCandidatesList">
+                            <!-- Populated dynamically by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="results-footer-bar">
+                        <button type="button" class="btn btn-outline" onclick="app.navigate('polls')">
+                            <i class="fa-solid fa-arrow-left"></i> View All Elections
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- VIEW 7: ADMINISTRATOR DASHBOARD                          -->
+            <!-- ========================================================= -->
+            <div id="view-admin" class="spa-view">
+                <div class="admin-dashboard">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> Administrator Dashboard</h1>
+                            <p class="page-subtitle">Manage campus polls, add election names and candidates manually, monitor turnout.</p>
+                        </div>
+                        <div class="header-action">
+                            <span class="badge badge-admin"><i class="fa-solid fa-lock"></i> Admin Mode</span>
+                        </div>
+                    </div>
+
+                    <!-- PROMINENT SEPARATE ACTION BUTTONS BAR -->
+                    <div class="admin-action-toolbar mb-4">
+                        <div class="toolbar-info">
+                            <h3><i class="fa-solid fa-sliders"></i> Quick Actions</h3>
+                            <p>Use the separate buttons below to manually add new election names or candidate details.</p>
+                        </div>
+                        <div class="toolbar-buttons">
+                            <!-- SEPARATE BUTTON 1: Add Election Name -->
+                            <button type="button" class="btn btn-primary btn-lg" onclick="app.openModal('electionModal')">
+                                <i class="fa-solid fa-folder-plus"></i> + Add Election Name
+                            </button>
+
+                            <!-- SEPARATE BUTTON 2: Add Candidate Details -->
+                            <button type="button" class="btn btn-secondary btn-lg" onclick="app.openModal('candidateModal')">
+                                <i class="fa-solid fa-user-plus"></i> + Add Candidate Details
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Metric Cards -->
+                    <div class="stats-grid mb-4" id="adminMetricsGrid">
+                        <!-- Populated dynamically by JavaScript -->
+                    </div>
+
+                    <!-- Table 1: Manage Election Polls -->
+                    <div class="admin-card mb-4">
+                        <div class="admin-card-header d-flex-between">
+                            <div class="header-title-group">
+                                <h3><i class="fa-solid fa-list-check"></i> Campus Elections & Polls</h3>
+                                <span class="text-muted">Manage active and completed election polls</span>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="app.openModal('electionModal')">
+                                <i class="fa-solid fa-plus"></i> Add Election
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Election Name / Title</th>
+                                        <th>Status</th>
+                                        <th>Voting Window</th>
+                                        <th>Results</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminPollsTableBody">
+                                    <!-- Populated dynamically by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Table 2: Registered Candidates -->
+                    <div class="admin-card mb-4">
+                        <div class="admin-card-header d-flex-between">
+                            <div class="header-title-group">
+                                <h3><i class="fa-solid fa-address-book"></i> Registered Candidates</h3>
+                                <span class="text-muted">Candidates appearing on the voters' ballot</span>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="app.openModal('candidateModal')">
+                                <i class="fa-solid fa-plus"></i> Add Candidate
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Candidate Name</th>
+                                        <th>Assigned Election</th>
+                                        <th>Platform / Statement</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminCandidatesTableBody">
+                                    <!-- Populated dynamically by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Table 3: Registered Student Voters -->
+                    <div class="admin-card mb-4">
+                        <div class="admin-card-header">
+                            <h3><i class="fa-solid fa-user-check"></i> Registered Student Voters</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>User ID</th>
+                                        <th>Student ID</th>
+                                        <th>Voter Full Name</th>
+                                        <th>Total Ballots Cast</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminVotersTableBody">
+                                    <!-- Populated dynamically by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================================= -->
+    <!-- MODAL 1: ADD ELECTION NAME MANUALLY                           -->
+    <!-- ============================================================= -->
+    <div class="modal-backdrop" id="electionModal" role="dialog" aria-modal="true">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <div class="modal-icon-circle modal-icon-primary">
+                        <i class="fa-solid fa-folder-plus"></i>
+                    </div>
+                    <div>
+                        <h3>Add Election Name</h3>
+                        <p class="modal-subtitle">Manually define an election title and voting schedule.</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="app.closeModal('electionModal')">&times;</button>
+            </div>
+
+            <form onsubmit="event.preventDefault(); app.handleAddPoll();">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new_poll_title" class="form-label">Election Name / Title *</label>
+                        <input type="text" id="new_poll_title" class="form-control" placeholder="e.g., Computer Science Dept Representative 2026" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col">
+                            <label for="new_poll_start" class="form-label">Voting Starts</label>
+                            <input type="text" id="new_poll_start" class="form-control" placeholder="YYYY-MM-DD HH:MM:SS">
+                            <small class="form-hint">Leave blank for current time</small>
+                        </div>
+                        <div class="form-group col">
+                            <label for="new_poll_end" class="form-label">Voting Ends</label>
+                            <input type="text" id="new_poll_end" class="form-control" placeholder="YYYY-MM-DD HH:MM:SS">
+                            <small class="form-hint">Closing deadline</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_poll_status" class="form-label">Initial Status</label>
+                        <select id="new_poll_status" class="form-control">
+                            <option value="active" selected>Active (Voting Immediately Open)</option>
+                            <option value="closed">Closed (Voting Inactive)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="app.closeModal('electionModal')">Cancel</button>
+                    <!-- SEPARATE SUBMIT BUTTON FOR ELECTION -->
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-check"></i> Save & Launch Election
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- MODAL 2: ADD CANDIDATE DETAILS MANUALLY                       -->
+    <!-- ============================================================= -->
+    <div class="modal-backdrop" id="candidateModal" role="dialog" aria-modal="true">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <div class="modal-icon-circle modal-icon-secondary">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3>Add Candidate Details</h3>
+                        <p class="modal-subtitle">Manually register a candidate and their campaign manifesto.</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="app.closeModal('candidateModal')">&times;</button>
+            </div>
+
+            <form onsubmit="event.preventDefault(); app.handleAddCandidate();">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new_cand_poll_id" class="form-label">Select Election *</label>
+                        <select id="new_cand_poll_id" class="form-control" required>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_cand_name" class="form-label">Candidate Full Name *</label>
+                        <input type="text" id="new_cand_name" class="form-control" placeholder="e.g., Jennifer Lawrence" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_cand_desc" class="form-label">Campaign Manifesto / Platform</label>
+                        <textarea id="new_cand_desc" class="form-control" rows="3" placeholder="Key campaign pledges, vision, or background qualifications..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="app.closeModal('candidateModal')">Cancel</button>
+                    <!-- SEPARATE SUBMIT BUTTON FOR CANDIDATE -->
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fa-solid fa-user-check"></i> Save Candidate Details
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer with Mandatory Educational Disclaimer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-info">
+                <p class="project-title"><strong>Online Voting System</strong> &mdash; Full-Stack Educational Mini Project</p>
+                <p class="tech-stack">Deployed on GitHub Pages &bull; Client-Side Storage &bull; Full Database Parity</p>
+                <div style="margin-top: 0.6rem;">
+                    <button type="button" class="btn-reset-db" onclick="app.resetDatabase()">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Demo Database
+                    </button>
+                </div>
+            </div>
+            <div class="disclaimer-box">
+                <i class="fa-solid fa-scale-balanced disclaimer-icon"></i>
+                <p><strong>Classroom Notice:</strong> This is a demonstration project only, not a system for real public elections. It does not provide the cryptographic secrecy or certified auditing required for legal elections.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Client-side Application Controller -->
+    <script>
+    /**
+     * Online Voting System - GitHub Pages Client Controller
+     * Implements full database parity (users, polls, candidates, votes)
+     * using localStorage so the app runs 100% on GitHub Pages without a server!
+     */
+    const STORAGE_KEY = 'votesphere_github_db_v1';
+
+    const defaultData = {
+        users: [
+            { id: 1, name: "System Administrator", student_id: "ADMIN001", password: "admin123", role: "admin" },
+            { id: 2, name: "Alice Johnson", student_id: "STU1001", password: "voter123", role: "voter" },
+            { id: 3, name: "Bob Smith", student_id: "STU1002", password: "voter123", role: "voter" }
+        ],
+        polls: [
+            { id: 1, title: "Student Council President Election 2026", start_time: "2026-10-01 09:00:00", end_time: "2026-11-15 17:00:00", status: "active" },
+            { id: 2, title: "Campus Sports Representative Election", start_time: "2026-10-01 09:00:00", end_time: "2026-11-20 17:00:00", status: "active" }
+        ],
+        candidates: [
+            { id: 1, name: "Alex Rivera", description: "Focuses on campus sustainability, 24/7 study rooms, and student mental health initiatives.", poll_id: 1 },
+            { id: 2, name: "Maya Chen", description: "Advocates for improved campus Wi-Fi infrastructure, gym upgrades, and transparent club funding.", poll_id: 1 },
+            { id: 3, name: "Jordan Taylor", description: "Committed to expanding cafeteria food varieties and hosting inter-college cultural fests.", poll_id: 1 },
+            { id: 4, name: "Marcus Vance", description: "Varsity basketball captain with a plan to introduce weekend intramural tournaments for all students.", poll_id: 2 },
+            { id: 5, name: "Elena Rostova", description: "Badminton club lead focusing on new fitness equipment and self-defense workshops.", poll_id: 2 }
+        ],
+        votes: [
+            { id: 1, voter_id: 2, candidate_id: 1, poll_id: 1, timestamp: "2026-10-29 12:00:00" }
+        ]
+    };
+
+    class VotingApp {
+        constructor() {
+            this.currentUser = null;
+            this.selectedPollId = 1;
+            this.currentView = 'login';
+            this.initDatabase();
+            this.initSession();
+        }
+
+        initDatabase() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) {
+                this.db = JSON.parse(JSON.stringify(defaultData));
+                this.saveDatabase();
+            } else {
+                try {
+                    this.db = JSON.parse(raw);
+                } catch(e) {
+                    this.db = JSON.parse(JSON.stringify(defaultData));
+                    this.saveDatabase();
+                }
+            }
+        }
+
+        saveDatabase() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.db));
+        }
+
+        resetDatabase() {
+            if (confirm("Reset the demo database back to clean classroom initial state? All custom added candidates and new votes will be cleared.")) {
+                this.db = JSON.parse(JSON.stringify(defaultData));
+                this.saveDatabase();
+                this.showFlash("Demo database restored to default sample data.", "info");
+                this.refreshCurrentView();
+            }
+        }
+
+        initSession() {
+            const stored = sessionStorage.getItem('votesphere_session_user');
+            if (stored) {
+                try {
+                    this.currentUser = JSON.parse(stored);
+                } catch(e) {
+                    this.currentUser = null;
+                }
+            }
+            this.updateNavbar();
+            if (this.currentUser) {
+                if (this.currentUser.role === 'admin') {
+                    this.navigate('admin');
+                } else {
+                    this.navigate('polls');
+                }
+            } else {
+                this.navigate('login');
+            }
+        }
+
+        updateNavbar() {
+            const userActions = document.getElementById('navUserActions');
+            const navPolls = document.getElementById('nav-item-polls');
+            const navAdmin = document.getElementById('nav-item-admin');
+
+            if (this.currentUser) {
+                navPolls.style.display = 'block';
+                if (this.currentUser.role === 'admin') {
+                    navAdmin.style.display = 'block';
+                } else {
+                    navAdmin.style.display = 'none';
+                }
+
+                userActions.innerHTML = `
+                    <div class="user-pill">
+                        <i class="fa-regular fa-circle-user"></i>
+                        <span class="user-name">${this.escapeHtml(this.currentUser.name)}</span>
+                        <span class="role-badge role-${this.currentUser.role}">${this.currentUser.role.toUpperCase()}</span>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="app.logout()">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                    </button>
+                `;
+            } else {
+                navPolls.style.display = 'none';
+                navAdmin.style.display = 'none';
+
+                userActions.innerHTML = `
+                    <button type="button" class="btn btn-outline btn-sm" onclick="app.navigate('login')">
+                        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="app.navigate('register')">
+                        <i class="fa-solid fa-user-plus"></i> Register
+                    </button>
+                `;
+            }
+        }
+
+        navigate(viewId, param = null) {
+            document.querySelectorAll('.spa-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+
+            const target = document.getElementById('view-' + viewId);
+            if (target) {
+                target.classList.add('active');
+                this.currentView = viewId;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            const navLink = document.getElementById('nav-link-' + viewId);
+            if (navLink) navLink.classList.add('active');
+
+            if (viewId === 'polls') this.renderPolls();
+            if (viewId === 'ballot') this.renderBallot(param);
+            if (viewId === 'results') this.renderResults(param || this.selectedPollId);
+            if (viewId === 'admin') this.renderAdmin();
+        }
+
+        refreshCurrentView() {
+            this.navigate(this.currentView, this.selectedPollId);
+        }
+
+        showFlash(message, category = 'info') {
+            const container = document.getElementById('flashContainer');
+            const iconMap = {
+                success: 'fa-circle-check',
+                danger: 'fa-circle-xmark',
+                warning: 'fa-triangle-exclamation',
+                info: 'fa-circle-info'
+            };
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${category}`;
+            alertDiv.innerHTML = `
+                <div class="alert-icon"><i class="fa-solid ${iconMap[category] || 'fa-circle-info'}"></i></div>
+                <div class="alert-message">${this.escapeHtml(message)}</div>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(alertDiv);
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                setTimeout(() => alertDiv.remove(), 400);
+            }, 6000);
+        }
+
+        fillCredentials(id, pw) {
+            document.getElementById('login_student_id').value = id;
+            document.getElementById('login_password').value = pw;
+            this.handleLogin('voter');
+        }
+
+        fillAdminCredentials(id, pw) {
+            document.getElementById('admin_login_id').value = id;
+            document.getElementById('admin_login_password').value = pw;
+            this.handleLogin('admin');
+        }
+
+        handleLogin(expectedRole) {
+            const idInput = expectedRole === 'admin' ? document.getElementById('admin_login_id') : document.getElementById('login_student_id');
+            const pwInput = expectedRole === 'admin' ? document.getElementById('admin_login_password') : document.getElementById('login_password');
+
+            const id = idInput.value.trim().toUpperCase();
+            const pw = pwInput.value.trim();
+
+            const user = this.db.users.find(u => u.student_id.toUpperCase() === id && u.password === pw);
+
+            if (!user) {
+                this.showFlash("Invalid credentials. Please check your ID and Password.", "danger");
+                return;
+            }
+
+            if (expectedRole === 'admin' && user.role !== 'admin') {
+                this.showFlash("Access denied. Administrator privileges required.", "danger");
+                return;
+            }
+
+            this.currentUser = user;
+            sessionStorage.setItem('votesphere_session_user', JSON.stringify(user));
+            this.updateNavbar();
+            this.showFlash(`Welcome, ${user.name}! You are signed in.`, "success");
+
+            if (user.role === 'admin') {
+                this.navigate('admin');
+            } else {
+                this.navigate('polls');
+            }
+        }
+
+        handleRegister() {
+            const name = document.getElementById('reg_name').value.trim();
+            const studentId = document.getElementById('reg_student_id').value.trim().toUpperCase();
+            const pw = document.getElementById('reg_password').value;
+            const confirmPw = document.getElementById('reg_confirm_password').value;
+
+            if (pw !== confirmPw) {
+                this.showFlash("Passwords do not match. Please verify.", "danger");
+                return;
+            }
+
+            if (this.db.users.some(u => u.student_id.toUpperCase() === studentId)) {
+                this.showFlash("A student with this ID is already registered. Please sign in.", "warning");
+                this.navigate('login');
+                return;
+            }
+
+            const newUser = {
+                id: this.db.users.length + 1,
+                name: name,
+                student_id: studentId,
+                password: pw,
+                role: 'voter'
+            };
+
+            this.db.users.push(newUser);
+            this.saveDatabase();
+            this.showFlash("Registration successful! You can now sign in and vote.", "success");
+            this.navigate('login');
+            document.getElementById('login_student_id').value = studentId;
+        }
+
+        logout() {
+            this.currentUser = null;
+            sessionStorage.removeItem('votesphere_session_user');
+            this.updateNavbar();
+            this.showFlash("You have signed out successfully.", "info");
+            this.navigate('login');
+        }
+
+        renderPolls() {
+            const grid = document.getElementById('pollsGrid');
+            if (!this.db.polls.length) {
+                grid.innerHTML = `
+                    <div class="empty-state-card" style="grid-column: 1/-1;">
+                        <i class="fa-solid fa-folder-open empty-icon"></i>
+                        <h3>No Polls Available</h3>
+                        <p>An administrator has not scheduled any elections yet.</p>
+                    </div>`;
+                return;
+            }
+
+            const voterId = this.currentUser ? this.currentUser.id : null;
+
+            grid.innerHTML = this.db.polls.map(poll => {
+                const candCount = this.db.candidates.filter(c => c.poll_id === poll.id).length;
+                const hasVoted = voterId && this.db.votes.some(v => v.voter_id === voterId && v.poll_id === poll.id);
+
+                return `
+                <div class="poll-card ${poll.status === 'closed' ? 'poll-card-closed' : ''}">
+                    <div class="poll-card-header">
+                        <span class="status-badge status-${poll.status}">
+                            <i class="fa-solid fa-circle status-dot"></i> ${poll.status.toUpperCase()}
+                        </span>
+                        ${hasVoted ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> You Voted</span>' :
+                          (poll.status === 'active' ? '<span class="badge badge-warning"><i class="fa-solid fa-hourglass-half"></i> Vote Pending</span>' : '')}
+                    </div>
+
+                    <h2 class="poll-card-title">${this.escapeHtml(poll.title)}</h2>
+
+                    <div class="poll-meta-list">
+                        <div class="poll-meta-item">
+                            <i class="fa-solid fa-users"></i>
+                            <span>Candidates: <strong>${candCount}</strong></span>
+                        </div>
+                        <div class="poll-meta-item">
+                            <i class="fa-regular fa-calendar-check"></i>
+                            <span>Ends: ${poll.end_time}</span>
+                        </div>
+                    </div>
+
+                    <div class="poll-card-actions">
+                        ${poll.status === 'active' && !hasVoted ? `
+                            <button type="button" class="btn btn-primary btn-block" onclick="app.navigate('ballot', ${poll.id})">
+                                <i class="fa-solid fa-check-to-slot"></i> Cast Your Vote
+                            </button>
+                        ` : hasVoted ? `
+                            <button type="button" class="btn btn-outline btn-block" onclick="app.navigate('results', ${poll.id})">
+                                <i class="fa-solid fa-chart-pie"></i> View Live Results
+                            </button>
+                        ` : `
+                            <button type="button" class="btn btn-secondary btn-block" onclick="app.navigate('results', ${poll.id})">
+                                <i class="fa-solid fa-lock"></i> Poll Closed &bull; View Results
+                            </button>
+                        `}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        renderBallot(pollId) {
+            const poll = this.db.polls.find(p => p.id === pollId) || this.db.polls[0];
+            if (!poll) {
+                this.navigate('polls');
+                return;
+            }
+            this.selectedPollId = poll.id;
+            const voterId = this.currentUser ? this.currentUser.id : null;
+            const hasVoted = voterId && this.db.votes.some(v => v.voter_id === voterId && v.poll_id === poll.id);
+
+            const headerCard = document.getElementById('ballotHeaderCard');
+            headerCard.innerHTML = `
+                <div class="ballot-title-row">
+                    <div>
+                        <span class="status-badge status-${poll.status}">${poll.status.toUpperCase()}</span>
+                        <h1 class="ballot-title">${this.escapeHtml(poll.title)}</h1>
+                        <p class="ballot-dates">
+                            <i class="fa-regular fa-clock"></i> Election Window: ${poll.start_time} &mdash; ${poll.end_time}
+                        </p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="app.navigate('results', ${poll.id})">
+                            <i class="fa-solid fa-chart-column"></i> Current Results
+                        </button>
+                    </div>
+                </div>
+                ${hasVoted ? `
+                    <div class="alert alert-info mt-3">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <div><strong>Ballot Cast!</strong> You have already submitted your vote in this election. In accordance with voting rules, each student is permitted only one vote per poll.</div>
+                    </div>` :
+                  (poll.status === 'closed' ? `
+                    <div class="alert alert-warning mt-3">
+                        <i class="fa-solid fa-lock"></i>
+                        <div><strong>Poll Closed!</strong> Voting has ended for this election. You can review the final tallied results.</div>
+                    </div>` : `
+                    <div class="alert alert-info mt-3">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <div><strong>Voting Instructions:</strong> Select your preferred candidate by clicking their card below, then press <strong>"Confirm & Cast Ballot"</strong>. Once recorded, your vote cannot be changed.</div>
+                    </div>`)}
+            `;
+
+            const candidates = this.db.candidates.filter(c => c.poll_id === poll.id);
+            const candGrid = document.getElementById('ballotCandidatesGrid');
+            const submitBar = document.getElementById('ballotSubmitBar');
+
+            if (!candidates.length) {
+                candGrid.innerHTML = `
+                    <div class="empty-state-card" style="width:100%;">
+                        <i class="fa-solid fa-user-slash empty-icon"></i>
+                        <h3>No Candidates Registered</h3>
+                        <p>Candidates have not been published for this election yet.</p>
+                    </div>`;
+                submitBar.style.display = 'none';
+                return;
+            }
+
+            candGrid.innerHTML = candidates.map(cand => `
+                <label class="candidate-radio-card ${hasVoted || poll.status === 'closed' ? 'disabled' : ''}" for="cand_${cand.id}">
+                    <input type="radio" name="candidate_id" id="cand_${cand.id}" value="${cand.id}" data-name="${this.escapeHtml(cand.name)}" ${hasVoted || poll.status === 'closed' ? 'disabled' : ''} required>
+                    <div class="card-radio-custom"></div>
+                    <div class="candidate-info">
+                        <h3 class="candidate-name">${this.escapeHtml(cand.name)}</h3>
+                        <p class="candidate-desc">${this.escapeHtml(cand.description || "No campaign statement provided.")}</p>
+                    </div>
+                </label>
+            `).join('');
+
+            // Highlight radio on change
+            candGrid.querySelectorAll('input[type="radio"]').forEach(r => {
+                r.addEventListener('change', () => {
+                    candGrid.querySelectorAll('.candidate-radio-card').forEach(c => c.classList.remove('selected'));
+                    if (r.checked) r.closest('.candidate-radio-card').classList.add('selected');
+                });
+            });
+
+            submitBar.style.display = (!hasVoted && poll.status === 'active') ? 'block' : 'none';
+        }
+
+        handleCastVote() {
+            if (!this.currentUser) {
+                this.showFlash("Please sign in first to vote.", "warning");
+                this.navigate('login');
+                return;
+            }
+
+            const selectedRadio = document.querySelector('input[name="candidate_id"]:checked');
+            if (!selectedRadio) {
+                alert("Please select a candidate before submitting your ballot.");
+                return;
+            }
+
+            const candidateName = selectedRadio.getAttribute('data-name');
+            const candidateId = parseInt(selectedRadio.value);
+
+            // One vote per poll verification
+            const alreadyVoted = this.db.votes.some(v => v.voter_id === this.currentUser.id && v.poll_id === this.selectedPollId);
+            if (alreadyVoted) {
+                this.showFlash("You have ALREADY voted in this poll. Each voter is allowed only one vote.", "warning");
+                this.navigate('results', this.selectedPollId);
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to vote for:\n\n👉 ${candidateName}\n\nImportant: Once submitted, your vote is recorded permanently in the database and cannot be modified.`)) {
+                return;
+            }
+
+            const now = new Date();
+            const timestamp = now.getFullYear() + "-" +
+                String(now.getMonth() + 1).padStart(2, '0') + "-" +
+                String(now.getDate()).padStart(2, '0') + " " +
+                String(now.getHours()).padStart(2, '0') + ":" +
+                String(now.getMinutes()).padStart(2, '0') + ":" +
+                String(now.getSeconds()).padStart(2, '0');
+
+            const newVote = {
+                id: this.db.votes.length + 1,
+                voter_id: this.currentUser.id,
+                candidate_id: candidateId,
+                poll_id: this.selectedPollId,
+                timestamp: timestamp
+            };
+
+            this.db.votes.push(newVote);
+            this.saveDatabase();
+            this.showFlash(`Success! Your vote for '${candidateName}' has been officially recorded.`, "success");
+            this.navigate('results', this.selectedPollId);
+        }
+
+        renderResults(pollId) {
+            const select = document.getElementById('resultsPollSelect');
+            select.innerHTML = this.db.polls.map(p => `
+                <option value="${p.id}" ${p.id === pollId ? 'selected' : ''}>
+                    ${this.escapeHtml(p.title)} (${p.status.toUpperCase()})
+                </option>
+            `).join('');
+
+            const poll = this.db.polls.find(p => p.id === pollId) || this.db.polls[0];
+            if (!poll) return;
+            this.selectedPollId = poll.id;
+
+            const pollVotes = this.db.votes.filter(v => v.poll_id === poll.id);
+            const totalVotes = pollVotes.length;
+
+            const statsGrid = document.getElementById('resultsStatsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue"><i class="fa-solid fa-square-poll-vertical"></i></div>
+                    <div class="stat-details">
+                        <span class="stat-label">Election Title</span>
+                        <h3 class="stat-value-text">${this.escapeHtml(poll.title)}</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-check-double"></i></div>
+                    <div class="stat-details">
+                        <span class="stat-label">Total Ballots Cast</span>
+                        <h3 class="stat-value">${totalVotes}</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-amber"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="stat-details">
+                        <span class="stat-label">Status</span>
+                        <h3 class="stat-value-text">
+                            <span class="status-badge status-${poll.status}">${poll.status.toUpperCase()}</span>
+                        </h3>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultsTotalSubtitle').innerText = `Total: ${totalVotes} vote${totalVotes !== 1 ? 's' : ''}`;
+
+            const candidates = this.db.candidates.filter(c => c.poll_id === poll.id);
+            const tallies = candidates.map(c => {
+                const count = pollVotes.filter(v => v.candidate_id === c.id).length;
+                const percentage = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(1) : "0.0";
+                return { ...c, count, percentage };
+            });
+
+            tallies.sort((a, b) => b.count - a.count);
+            const maxVotes = tallies.length ? tallies[0].count : 0;
+
+            const list = document.getElementById('resultsCandidatesList');
+            if (!tallies.length) {
+                list.innerHTML = `<div class="p-4 text-center text-muted"><p>No candidates listed for this election.</p></div>`;
+                return;
+            }
+
+            list.innerHTML = tallies.map((c, idx) => {
+                const isLeader = c.count === maxVotes && c.count > 0;
+                return `
+                <div class="result-item ${isLeader ? 'leader-item' : ''}">
+                    <div class="result-item-header">
+                        <div class="candidate-headline">
+                            <span class="rank-badge">#${idx + 1}</span>
+                            <div>
+                                <h3 class="result-candidate-name">
+                                    ${this.escapeHtml(c.name)}
+                                    ${isLeader ? `<span class="leader-badge"><i class="fa-solid fa-crown"></i> ${poll.status === 'closed' ? 'Winner' : 'Current Leader'}</span>` : ''}
+                                </h3>
+                                <p class="result-candidate-desc">${this.escapeHtml(c.description || "No campaign statement provided.")}</p>
+                            </div>
+                        </div>
+                        <div class="tally-score">
+                            <span class="vote-count-number">${c.count}</span>
+                            <span class="vote-count-label">vote${c.count !== 1 ? 's' : ''}</span>
+                            <span class="vote-percentage">(${c.percentage}%)</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill ${isLeader ? 'fill-leader' : ''}" style="width: ${c.percentage}%;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        renderAdmin() {
+            if (!this.currentUser || this.currentUser.role !== 'admin') {
+                this.showFlash("Access denied. Please sign in as an Administrator.", "danger");
+                this.navigate('admin-login');
+                return;
+            }
+
+            const totalVoters = this.db.users.filter(u => u.role === 'voter').length;
+            const totalPolls = this.db.polls.length;
+            const totalVotes = this.db.votes.length;
+
+            document.getElementById('adminMetricsGrid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
+                    <div class="stat-details">
+                        <span class="stat-label">Registered Voters</span>
+                        <h3 class="stat-value">${totalVoters}</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple"><i class="fa-solid fa-box-archive"></i></div>
+                    <div class="stat-details">
+                        <span class="stat-label">Total Polls</span>
+                        <h3 class="stat-value">${totalPolls}</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-check-to-slot"></i></div>
+                    <div class="stat-details">
+                        <span class="stat-label">Total Ballots Cast</span>
+                        <h3 class="stat-value">${totalVotes}</h3>
+                    </div>
+                </div>
+            `;
+
+            // Populate Polls Table
+            const pollsBody = document.getElementById('adminPollsTableBody');
+            pollsBody.innerHTML = this.db.polls.map(p => `
+                <tr>
+                    <td><span class="id-tag">#${p.id}</span></td>
+                    <td><strong>${this.escapeHtml(p.title)}</strong></td>
+                    <td><span class="status-badge status-${p.status}">${p.status.toUpperCase()}</span></td>
+                    <td class="time-cell"><small><strong>Start:</strong> ${p.start_time}<br><strong>End:</strong> ${p.end_time}</small></td>
+                    <td>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="app.navigate('results', ${p.id})">
+                            <i class="fa-solid fa-chart-simple"></i> Tallies
+                        </button>
+                    </td>
+                    <td>
+                        <button type="button" class="btn ${p.status === 'active' ? 'btn-warning' : 'btn-success'} btn-xs" onclick="app.togglePollStatus(${p.id})">
+                            ${p.status === 'active' ? '<i class="fa-solid fa-ban"></i> Close' : '<i class="fa-solid fa-play"></i> Re-open'}
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-xs" onclick="app.deletePoll(${p.id})">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Populate Candidates Table
+            const candBody = document.getElementById('adminCandidatesTableBody');
+            candBody.innerHTML = this.db.candidates.map(c => {
+                const poll = this.db.polls.find(p => p.id === c.poll_id);
+                return `
+                <tr>
+                    <td><span class="id-tag">#${c.id}</span></td>
+                    <td><strong>${this.escapeHtml(c.name)}</strong></td>
+                    <td><span class="badge badge-subtle">${this.escapeHtml(poll ? poll.title : 'Unassigned')}</span></td>
+                    <td class="desc-cell">${this.escapeHtml(c.description || "No statement")}</td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-xs" onclick="app.deleteCandidate(${c.id})">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            // Populate Voters Roster
+            const votersBody = document.getElementById('adminVotersTableBody');
+            const voterUsers = this.db.users.filter(u => u.role === 'voter');
+            votersBody.innerHTML = voterUsers.map(v => {
+                const votesCount = this.db.votes.filter(vt => vt.voter_id === v.id).length;
+                return `
+                <tr>
+                    <td><span class="id-tag">#${v.id}</span></td>
+                    <td><code>${this.escapeHtml(v.student_id)}</code></td>
+                    <td>${this.escapeHtml(v.name)}</td>
+                    <td><span class="badge ${votesCount > 0 ? 'badge-success' : 'badge-subtle'}">${votesCount} ballot${votesCount !== 1 ? 's' : ''}</span></td>
+                </tr>`;
+            }).join('');
+
+            // Populate modal dropdown
+            const modalSelect = document.getElementById('new_cand_poll_id');
+            modalSelect.innerHTML = `<option value="" disabled selected>-- Choose an Election --</option>` +
+                this.db.polls.map(p => `<option value="${p.id}">${this.escapeHtml(p.title)} (${p.status.toUpperCase()})</option>`).join('');
+        }
+
+        handleAddPoll() {
+            const title = document.getElementById('new_poll_title').value.trim();
+            if (!title) return;
+
+            let start = document.getElementById('new_poll_start').value.trim();
+            let end = document.getElementById('new_poll_end').value.trim();
+            const status = document.getElementById('new_poll_status').value;
+
+            const now = new Date();
+            if (!start) start = now.toISOString().slice(0, 19).replace('T', ' ');
+            if (!end) end = "2026-12-31 23:59:59";
+
+            const newPoll = {
+                id: this.db.polls.length ? Math.max(...this.db.polls.map(p => p.id)) + 1 : 1,
+                title: title,
+                start_time: start,
+                end_time: end,
+                status: status
+            };
+
+            this.db.polls.push(newPoll);
+            this.saveDatabase();
+            this.closeModal('electionModal');
+            document.getElementById('new_poll_title').value = '';
+            this.showFlash(`Election '${title}' created successfully!`, "success");
+            this.renderAdmin();
+        }
+
+        handleAddCandidate() {
+            const pollId = parseInt(document.getElementById('new_cand_poll_id').value);
+            const name = document.getElementById('new_cand_name').value.trim();
+            const desc = document.getElementById('new_cand_desc').value.trim();
+
+            if (!pollId || !name) {
+                alert("Please select an election and enter the candidate name.");
+                return;
+            }
+
+            const newCand = {
+                id: this.db.candidates.length ? Math.max(...this.db.candidates.map(c => c.id)) + 1 : 1,
+                poll_id: pollId,
+                name: name,
+                description: desc
+            };
+
+            this.db.candidates.push(newCand);
+            this.saveDatabase();
+            this.closeModal('candidateModal');
+            document.getElementById('new_cand_name').value = '';
+            document.getElementById('new_cand_desc').value = '';
+            this.showFlash(`Candidate '${name}' added to ballot successfully!`, "success");
+            this.renderAdmin();
+        }
+
+        togglePollStatus(pollId) {
+            const poll = this.db.polls.find(p => p.id === pollId);
+            if (poll) {
+                poll.status = poll.status === 'active' ? 'closed' : 'active';
+                this.saveDatabase();
+                this.showFlash(`Poll '${poll.title}' status changed to ${poll.status.toUpperCase()}.`, "info");
+                this.renderAdmin();
+            }
+        }
+
+        deletePoll(pollId) {
+            const poll = this.db.polls.find(p => p.id === pollId);
+            if (!poll) return;
+
+            if (confirm(`Are you sure you want to delete poll '${poll.title}'? All associated candidates and cast votes will also be purged.`)) {
+                this.db.polls = this.db.polls.filter(p => p.id !== pollId);
+                this.db.candidates = this.db.candidates.filter(c => c.poll_id !== pollId);
+                this.db.votes = this.db.votes.filter(v => v.poll_id !== pollId);
+                this.saveDatabase();
+                this.showFlash(`Poll '${poll.title}' deleted.`, "info");
+                this.renderAdmin();
+            }
+        }
+
+        deleteCandidate(candId) {
+            const cand = this.db.candidates.find(c => c.id === candId);
+            if (!cand) return;
+
+            if (confirm(`Are you sure you want to remove candidate '${cand.name}'?`)) {
+                this.db.candidates = this.db.candidates.filter(c => c.id !== candId);
+                this.db.votes = this.db.votes.filter(v => v.candidate_id !== candId);
+                this.saveDatabase();
+                this.showFlash(`Candidate '${cand.name}' removed.`, "info");
+                this.renderAdmin();
+            }
+        }
+
+        openModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        toggleMobileMenu() {
+            const menu = document.getElementById('navMenu');
+            menu.classList.toggle('active');
+        }
+
+        escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+    }
+
+    // Initialize application on page load
+    let app;
+    document.addEventListener("DOMContentLoaded", () => {
+        app = new VotingApp();
+    });
+    </script>
+</body>
+</html>

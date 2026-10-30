@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Voter Registration - Online Voting System{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon-circle">
+                <i class="fa-solid fa-id-card"></i>
+            </div>
+            <h2>Register as a Voter</h2>
+            <p>Enter your student details to create your official voting credential.</p>
+        </div>
+
+        <form action="{{ url_for('register') }}" method="POST" class="auth-form" id="registerForm">
+            <!-- Full Name -->
+            <div class="form-group">
+                <label for="name" class="form-label">Full Name</label>
+                <div class="input-with-icon">
+                    <i class="fa-regular fa-user input-icon"></i>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        class="form-control" 
+                        placeholder="e.g., Samantha Miller" 
+                        value="{{ name or '' }}" 
+                        required 
+                        autofocus
+                    >
+                </div>
+            </div>
+
+            <!-- Student ID -->
+            <div class="form-group">
+                <label for="student_id" class="form-label">Student ID</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-hashtag input-icon"></i>
+                    <input 
+                        type="text" 
+                        id="student_id" 
+                        name="student_id" 
+                        class="form-control" 
+                        placeholder="e.g., STU2045" 
+                        value="{{ student_id or '' }}" 
+                        required
+                    >
+                </div>
+                <small class="form-hint">Used as your unique login ID across all campus elections.</small>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password" class="form-label">Create Password</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="At least 6 characters" 
+                        minlength="6" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-shield-halved input-icon"></i>
+                    <input 
+                        type="password" 
+                        id="confirm_password" 
+                        name="confirm_password" 
+                        class="form-control" 
+                        placeholder="Re-enter your password" 
+                        minlength="6" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fa-solid fa-user-plus"></i> Complete Registration
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Sign In here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

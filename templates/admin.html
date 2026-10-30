@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Online Voting System{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <!-- Header with Breadcrumb and Admin Status -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> Administrator Dashboard</h1>
+            <p class="page-subtitle">Manage campus polls, add candidates manually, monitor turnout, and review live results.</p>
+        </div>
+        <div class="header-action">
+            <span class="badge badge-admin"><i class="fa-solid fa-lock"></i> Admin Mode</span>
+        </div>
+    </div>
+
+    <!-- PROMINENT SEPARATE ACTION BUTTONS BAR -->
+    <div class="admin-action-toolbar mb-4">
+        <div class="toolbar-info">
+            <h3><i class="fa-solid fa-sliders"></i> Quick Actions</h3>
+            <p>Use the separate buttons below to manually add new election names or candidate details.</p>
+        </div>
+        <div class="toolbar-buttons">
+            <!-- SEPARATE BUTTON 1: Add Election Name -->
+            <button type="button" class="btn btn-primary btn-lg" onclick="openModal('electionModal')">
+                <i class="fa-solid fa-folder-plus"></i> + Add Election Name
+            </button>
+
+            <!-- SEPARATE BUTTON 2: Add Candidate Details -->
+            <button type="button" class="btn btn-secondary btn-lg" onclick="openModal('candidateModal')">
+                <i class="fa-solid fa-user-plus"></i> + Add Candidate Details
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Registered Voters</span>
+                <h3 class="stat-value">{{ total_voters }}</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-purple">
+                <i class="fa-solid fa-box-archive"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Total Polls</span>
+                <h3 class="stat-value">{{ total_polls }}</h3>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon icon-green">
+                <i class="fa-solid fa-check-to-slot"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">Total Ballots Cast</span>
+                <h3 class="stat-value">{{ total_votes }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 1: Manage Election Polls Table -->
+    <div class="admin-card mb-4" id="electionsSection">
+        <div class="admin-card-header d-flex-between">
+            <div class="header-title-group">
+                <h3><i class="fa-solid fa-list-check"></i> Campus Elections & Polls ({{ polls|length }})</h3>
+                <span class="text-muted">Manage active and completed election polls</span>
+            </div>
+            <!-- Separate button directly on Election table -->
+            <button type="button" class="btn btn-primary btn-sm" onclick="openModal('electionModal')">
+                <i class="fa-solid fa-plus"></i> Add Election Name
+            </button>
+        </div>
+
+        {% if not polls %}
+            <div class="p-4 text-center text-muted">
+                <p>No election polls added yet. Click <strong>"+ Add Election Name"</strong> above to create your first election.</p>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Election Name</th>
+                            <th>Status</th>
+                            <th>Created / Schedule</th>
+                            <th>Results</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for poll in polls %}
+                            <tr>
+                                <td><span class="id-tag">#{{ poll.id }}</span></td>
+                                <td>
+                                    <strong>{{ poll.title }}</strong>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ poll.status }}">
+                                        {{ poll.status|upper }}
+                                    </span>
+                                </td>
+                                <td class="time-cell">
+                                    <small><i class="fa-regular fa-clock"></i> {{ poll.start_time }}</small>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('view_results', poll_id=poll.id) }}" class="btn btn-outline btn-xs">
+                                        <i class="fa-solid fa-chart-simple"></i> View Tallies
+                                    </a>
+                                </td>
+                                <td>
+                                    <!-- Manually Add Candidate for this Election -->
+                                    <button type="button" class="btn btn-secondary btn-xs" onclick="openCandidateModalForPoll('{{ poll.id }}')" title="Add Candidate to {{ poll.title }}">
+                                        <i class="fa-solid fa-user-plus"></i> + Add Candidate
+                                    </button>
+
+                                    <!-- Toggle Status Button -->
+                                    <form action="{{ url_for('admin_toggle_poll', poll_id=poll.id) }}" method="POST" style="display:inline;">
+                                        {% if poll.status == 'active' %}
+                                            <button type="submit" class="btn btn-warning btn-xs" title="Close this poll">
+                                                <i class="fa-solid fa-ban"></i> Close Poll
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-success btn-xs" title="Activate this poll">
+                                                <i class="fa-solid fa-play"></i> Re-open
+                                            </button>
+                                        {% endif %}
+                                    </form>
+
+                                    <!-- Delete Poll Button -->
+                                    <form 
+                                        action="{{ url_for('admin_delete_poll', poll_id=poll.id) }}" 
+                                        method="POST" 
+                                        onsubmit="return confirm('WARNING: Deleting poll \'{{ poll.title }}\' will also remove all its candidates and votes. Proceed?');"
+                                        style="display:inline;"
+                                    >
+                                        <button type="submit" class="btn btn-outline-danger btn-xs" title="Delete Poll">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- SECTION 2: Candidates Management Table -->
+    <div class="admin-card mb-4" id="candidatesSection">
+        <div class="admin-card-header d-flex-between">
+            <div class="header-title-group">
+                <h3><i class="fa-solid fa-address-book"></i> Registered Candidates ({{ candidates|length }})</h3>
+                <span class="text-muted">Candidates appearing on the voters' ballot</span>
+            </div>
+            <!-- Separate button directly on Candidate table -->
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('candidateModal')">
+                <i class="fa-solid fa-plus"></i> Add Candidate Details
+            </button>
+        </div>
+
+        {% if not candidates %}
+            <div class="p-4 text-center text-muted">
+                <p>No candidates added yet. Click <strong>"+ Add Candidate Details"</strong> above to manually register candidates.</p>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Candidate Name</th>
+                            <th>Assigned Election</th>
+                            <th>Candidate Details / Platform</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cand in candidates %}
+                            <tr>
+                                <td><span class="id-tag">#{{ cand.id }}</span></td>
+                                <td><strong>{{ cand.name }}</strong></td>
+                                <td><span class="badge badge-subtle">{{ cand.poll_title }}</span></td>
+                                <td class="desc-cell">{{ cand.description or "No candidate details provided." }}</td>
+                                <td>
+                                    <form 
+                                        action="{{ url_for('admin_delete_candidate', candidate_id=cand.id) }}" 
+                                        method="POST" 
+                                        onsubmit="return confirm('Are you sure you want to remove candidate \'{{ cand.name }}\'? Any votes for them will also be removed.');"
+                                        style="display:inline;"
+                                    >
+                                        <button type="submit" class="btn btn-outline-danger btn-xs" title="Remove Candidate">
+                                            <i class="fa-solid fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- SECTION 3: Registered Student Voters Roster -->
+    <div class="admin-card mb-4">
+        <div class="admin-card-header">
+            <h3><i class="fa-solid fa-user-check"></i> Registered Student Voters ({{ voters|length }})</h3>
+        </div>
+        {% if not voters %}
+            <div class="p-4 text-center text-muted">
+                <p>No registered voters yet.</p>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Student ID</th>
+                            <th>Voter Full Name</th>
+                            <th>Total Ballots Cast</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for voter in voters %}
+                            <tr>
+                                <td><span class="id-tag">#{{ voter.id }}</span></td>
+                                <td><code>{{ voter.student_id }}</code></td>
+                                <td>{{ voter.name }}</td>
+                                <td>
+                                    <span class="badge {% if voter.votes_cast > 0 %}badge-success{% else %}badge-subtle{% endif %}">
+                                        {{ voter.votes_cast }} ballot{% if voter.votes_cast != 1 %}s{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- MODAL 1: ADD ELECTION NAME ONLY                                   -->
+<!-- ================================================================= -->
+<div class="modal-backdrop" id="electionModal" role="dialog" aria-modal="true" aria-labelledby="electionModalTitle">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title-wrap">
+                <div class="modal-icon-circle modal-icon-primary">
+                    <i class="fa-solid fa-folder-plus"></i>
+                </div>
+                <div>
+                    <h3 id="electionModalTitle">Add Election Name</h3>
+                    <p class="modal-subtitle">Enter the election title. Candidate details are added manually.</p>
+                </div>
+            </div>
+            <button type="button" class="modal-close" onclick="closeModal('electionModal')" aria-label="Close modal">&times;</button>
+        </div>
+
+        <form action="{{ url_for('admin_add_poll') }}" method="POST">
+            <div class="modal-body">
+                <!-- Election Name Only -->
+                <div class="form-group">
+                    <label for="modal_poll_title" class="form-label">Election Name *</label>
+                    <input 
+                        type="text" 
+                        id="modal_poll_title" 
+                        name="title" 
+                        class="form-control" 
+                        placeholder="e.g., Computer Science Dept Representative 2026" 
+                        required
+                        autocomplete="off"
+                    >
+                    <small class="form-hint">Enter only the election name. You can manually add candidate details for this election next.</small>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('electionModal')">Cancel</button>
+                <!-- SUBMIT BUTTON FOR ELECTION NAME -->
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-check"></i> Save Election Name
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- MODAL 2: ADD CANDIDATE DETAILS MANUALLY                           -->
+<!-- ================================================================= -->
+<div class="modal-backdrop" id="candidateModal" role="dialog" aria-modal="true" aria-labelledby="candidateModalTitle">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title-wrap">
+                <div class="modal-icon-circle modal-icon-secondary">
+                    <i class="fa-solid fa-user-plus"></i>
+                </div>
+                <div>
+                    <h3 id="candidateModalTitle">Add Candidate Details</h3>
+                    <p class="modal-subtitle">Manually add candidate name and details for an election.</p>
+                </div>
+            </div>
+            <button type="button" class="modal-close" onclick="closeModal('candidateModal')" aria-label="Close modal">&times;</button>
+        </div>
+
+        <form action="{{ url_for('admin_add_candidate') }}" method="POST">
+            <div class="modal-body">
+                <!-- Assign to Election -->
+                <div class="form-group">
+                    <label for="modal_cand_poll_id" class="form-label">Select Election *</label>
+                    <select name="poll_id" id="modal_cand_poll_id" class="form-control" required>
+                        <option value="" disabled selected>-- Choose an Election --</option>
+                        {% for poll in polls %}
+                            <option value="{{ poll.id }}">{{ poll.title }} ({{ poll.status|capitalize }})</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-hint">Choose which election this candidate belongs to.</small>
+                </div>
+
+                <!-- Candidate Name -->
+                <div class="form-group">
+                    <label for="modal_cand_name" class="form-label">Candidate Name *</label>
+                    <input 
+                        type="text" 
+                        id="modal_cand_name" 
+                        name="name" 
+                        class="form-control" 
+                        placeholder="e.g., Jennifer Lawrence" 
+                        required
+                        autocomplete="off"
+                    >
+                    <small class="form-hint">Full name of the candidate.</small>
+                </div>
+
+                <!-- Candidate Details / Platform -->
+                <div class="form-group">
+                    <label for="modal_cand_desc" class="form-label">Candidate Details / Platform</label>
+                    <textarea 
+                        id="modal_cand_desc" 
+                        name="description" 
+                        class="form-control" 
+                        rows="3" 
+                        placeholder="Enter candidate details, qualifications, campaign pledges, or manifesto..."
+                    ></textarea>
+                    <small class="form-hint">Candidate manifesto, background, or platform details (optional).</small>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('candidateModal')">Cancel</button>
+                <!-- SUBMIT BUTTON FOR CANDIDATE -->
+                <button type="submit" class="btn btn-secondary">
+                    <i class="fa-solid fa-user-check"></i> Save Candidate Details
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

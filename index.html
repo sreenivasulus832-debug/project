@@ -87,6 +87,21 @@
             border-radius: 4px;
             letter-spacing: 0.05em;
         }
+        .candidate-tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.4rem;
+        }
+        .candidate-tag {
+            background: #f1f5f9;
+            color: var(--text-primary);
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+        }
         .btn-reset-db {
             background: transparent;
             border: 1px dashed var(--border-color);
@@ -132,15 +147,15 @@
                 <ul class="nav-links">
                     <li>
                         <a href="javascript:void(0)" onclick="app.navigate('polls')" class="nav-link" id="nav-link-polls">
-                            <i class="fa-solid fa-box-archive"></i> Student Voting Page
+                            <i class="fa-solid fa-check-to-slot"></i> Student Voting Page (Cast Only)
                         </a>
                     </li>
-                    <li>
+                    <li id="nav-item-results">
                         <a href="javascript:void(0)" onclick="app.navigate('results')" class="nav-link" id="nav-link-results">
                             <i class="fa-solid fa-chart-simple"></i> Live Results
                         </a>
                     </li>
-                    <li id="nav-item-admin">
+                    <li id="nav-item-admin" style="display:none;">
                         <a href="javascript:void(0)" onclick="app.navigate('admin')" class="nav-link nav-link-admin" id="nav-link-admin">
                             <i class="fa-solid fa-shield-halved"></i> Admin Dashboard
                         </a>
@@ -148,7 +163,7 @@
                 </ul>
 
                 <div class="nav-user-actions" id="navUserActions">
-                    <!-- Populated dynamically by JavaScript -->
+                    <!-- Populated dynamically by JavaScript based on role -->
                 </div>
             </nav>
         </div>
@@ -161,24 +176,22 @@
             <div class="flash-container" id="flashContainer"></div>
 
             <!-- ========================================================= -->
-            <!-- VIEW 1: STUDENT VOTING PAGE (Campus Elections & Ballots)  -->
+            <!-- VIEW 1: STUDENT VOTING PAGE (Elections Shown TO CAST ONLY) -->
             <!-- ========================================================= -->
             <div id="view-polls" class="spa-view active">
                 <div class="page-header d-flex-between">
                     <div>
-                        <h1 class="page-title"><i class="fa-solid fa-box-archive"></i> Student Voting Page</h1>
-                        <p class="page-subtitle">All active election names are listed below. Click <strong>"Cast Your Vote"</strong> to vote for any candidate.</p>
+                        <h1 class="page-title"><i class="fa-solid fa-check-to-slot"></i> Student Voting Page</h1>
+                        <p class="page-subtitle">All elections added in the Admin Page appear below <strong>exclusively to cast your vote</strong>. Select any election to cast your official ballot.</p>
                     </div>
-                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <div>
                         <button type="button" class="btn btn-outline btn-sm" onclick="app.refreshFromStorage(true)" title="Check for newly added elections">
                             <i class="fa-solid fa-rotate"></i> Refresh Elections
-                        </button>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="app.openModal('electionModal')" title="Add another election">
-                            <i class="fa-solid fa-plus"></i> + Add Election
                         </button>
                     </div>
                 </div>
 
+                <!-- Elections Grid (Filtered to Cast Vote Only) -->
                 <div class="polls-grid" id="pollsGrid">
                     <!-- Populated dynamically by JavaScript -->
                 </div>
@@ -248,21 +261,21 @@
 
                     <div class="results-footer-bar">
                         <button type="button" class="btn btn-primary" onclick="app.navigate('polls')">
-                            <i class="fa-solid fa-check-to-slot"></i> Cast Vote in Another Election
+                            <i class="fa-solid fa-check-to-slot"></i> Back to Student Voting Page
                         </button>
                     </div>
                 </div>
             </div>
 
             <!-- ========================================================= -->
-            <!-- VIEW 4: ADMINISTRATOR DASHBOARD                          -->
+            <!-- VIEW 4: ADMINISTRATOR DASHBOARD (Add Elections/Candidates)-->
             <!-- ========================================================= -->
             <div id="view-admin" class="spa-view">
                 <div class="admin-dashboard">
                     <div class="page-header">
                         <div>
                             <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> Administrator Dashboard</h1>
-                            <p class="page-subtitle">Manage campus polls, add election names and candidates manually, and monitor live turnout.</p>
+                            <p class="page-subtitle">Manage campus polls, add election names and candidates manually. Every election added here immediately appears on the Student Page to cast vote.</p>
                         </div>
                         <div class="header-action">
                             <span class="badge badge-admin"><i class="fa-solid fa-lock"></i> Admin Mode</span>
@@ -298,7 +311,7 @@
                         <div class="admin-card-header d-flex-between">
                             <div class="header-title-group">
                                 <h3><i class="fa-solid fa-list-check"></i> Campus Elections & Polls</h3>
-                                <span class="text-muted">Elections currently created in the system (appear live on student page)</span>
+                                <span class="text-muted">Elections added here immediately appear on the Student Page to cast vote</span>
                             </div>
                             <button type="button" class="btn btn-primary btn-sm" onclick="app.openModal('electionModal')">
                                 <i class="fa-solid fa-plus"></i> Add Election
@@ -397,7 +410,7 @@
                                 <i class="fa-solid fa-graduation-cap"></i>
                             </div>
                             <h2>Student Voter Sign In</h2>
-                            <p>Enter your Student ID and password to access the voting portal.</p>
+                            <p>Enter your Student ID and password to access the voting page to cast your vote.</p>
                         </div>
 
                         <form class="auth-form" onsubmit="event.preventDefault(); app.handleLogin('voter');">
@@ -418,7 +431,7 @@
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-block">
-                                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Vote
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Cast Vote
                             </button>
                         </form>
 
@@ -437,7 +450,7 @@
                                 <button type="button" class="btn-demo-pill" onclick="app.fillCredentials('STU1002', 'voter123')">
                                     <span class="pill-role voter-pill">Student</span>
                                     <span class="pill-id">STU1002</span>
-                                    <span class="pill-pw">(ready to vote)</span>
+                                    <span class="pill-pw">(ready to cast vote)</span>
                                 </button>
                                 <button type="button" class="btn-demo-pill" onclick="app.fillCredentials('STU1001', 'voter123')">
                                     <span class="pill-role voter-pill">Student</span>
@@ -470,7 +483,7 @@
                                 <i class="fa-solid fa-shield-halved"></i>
                             </div>
                             <h2>Administrator Sign In</h2>
-                            <p>Enter administrator credentials to access the election control panel.</p>
+                            <p>Enter administrator credentials to add elections and manage candidates.</p>
                         </div>
 
                         <form class="auth-form" onsubmit="event.preventDefault(); app.handleLogin('admin');">
@@ -572,7 +585,7 @@
     </main>
 
     <!-- ============================================================= -->
-    <!-- MODAL 1: ADD ELECTION NAME MANUALLY                           -->
+    <!-- MODAL 1: ADD ELECTION NAME MANUALLY (IN ADMIN PAGE)           -->
     <!-- ============================================================= -->
     <div class="modal-backdrop" id="electionModal" role="dialog" aria-modal="true">
         <div class="modal-dialog">
@@ -583,7 +596,7 @@
                     </div>
                     <div>
                         <h3>Add Election Name</h3>
-                        <p class="modal-subtitle">Define an election title and optional initial candidates.</p>
+                        <p class="modal-subtitle">Define an election title. It will appear on the Student Page to cast vote.</p>
                     </div>
                 </div>
                 <button type="button" class="modal-close" onclick="app.closeModal('electionModal')">&times;</button>
@@ -594,12 +607,12 @@
                     <div class="form-group">
                         <label for="new_poll_title" class="form-label">Election Name / Title *</label>
                         <input type="text" id="new_poll_title" class="form-control" placeholder="e.g., Computer Science Dept Representative 2026" required autofocus>
-                        <small class="form-hint">This exact election name will appear live on the student voting page.</small>
+                        <small class="form-hint">This election name will immediately show up on the Student Page to cast vote.</small>
                     </div>
 
-                    <!-- CANDIDATE SHORTCUT: Ensures election is immediately votable! -->
+                    <!-- CANDIDATE SHORTCUT: Ensures election is immediately ready to cast vote -->
                     <div class="modal-section-title">
-                        <i class="fa-solid fa-users"></i> Initial Candidates to Vote For (Recommended)
+                        <i class="fa-solid fa-users"></i> Initial Candidates to Vote For
                     </div>
 
                     <div class="form-group">
@@ -610,7 +623,7 @@
                     <div class="form-group">
                         <label for="new_poll_cand2" class="form-label">Candidate 2 Name</label>
                         <input type="text" id="new_poll_cand2" class="form-control" placeholder="e.g., Liam Chen">
-                        <small class="form-hint">If left empty, default candidates will be generated so students can vote right away.</small>
+                        <small class="form-hint">If left empty, two official nominees are automatically created so students can cast vote right away.</small>
                     </div>
 
                     <div class="modal-section-title">
@@ -631,7 +644,7 @@
                     <div class="form-group">
                         <label for="new_poll_status" class="form-label">Initial Status</label>
                         <select id="new_poll_status" class="form-control">
-                            <option value="active" selected>Active (Voting Immediately Open to Students)</option>
+                            <option value="active" selected>Active (Open for Students to Cast Vote)</option>
                             <option value="closed">Closed (Voting Inactive)</option>
                         </select>
                     </div>
@@ -641,7 +654,7 @@
                     <button type="button" class="btn btn-outline" onclick="app.closeModal('electionModal')">Cancel</button>
                     <!-- SEPARATE SUBMIT BUTTON FOR ELECTION -->
                     <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-check"></i> Save & Make Live for Students
+                        <i class="fa-solid fa-check"></i> Save & Show on Student Page
                     </button>
                 </div>
             </form>
@@ -702,7 +715,7 @@
         <div class="container footer-content">
             <div class="footer-info">
                 <p class="project-title"><strong>Online Voting System</strong> &mdash; Full-Stack Educational Mini Project</p>
-                <p class="tech-stack">Deployed on GitHub Pages &bull; Real-Time Client-Side Synchronized Database</p>
+                <p class="tech-stack">Deployed on GitHub Pages &bull; Client-Side Synchronized Database</p>
                 <div style="margin-top: 0.6rem;">
                     <button type="button" class="btn-reset-db" onclick="app.resetDatabase()">
                         <i class="fa-solid fa-rotate-left"></i> Reset Demo Database
@@ -721,9 +734,9 @@
     /**
      * Online Voting System - GitHub Pages Client Controller
      * Implements full real-time database parity (users, polls, candidates, votes)
-     * using localStorage + BroadcastChannel so the app is 100% interactive on GitHub Pages!
+     * Elections added in Admin Page immediately appear on the Student Page TO CAST ONLY.
      */
-    const STORAGE_KEY = 'votesphere_github_db_v2';
+    const STORAGE_KEY = 'votesphere_github_db_v3';
 
     const defaultData = {
         users: [
@@ -749,7 +762,7 @@
 
     class VotingApp {
         constructor() {
-            this.currentUser = { id: 3, name: "Bob Smith", student_id: "STU1002", role: "voter" }; // Default to active student so student page is immediately open!
+            this.currentUser = { id: 3, name: "Bob Smith", student_id: "STU1002", role: "voter" };
             this.selectedPollId = 1;
             this.currentView = 'polls';
             this.lastPollsHash = '';
@@ -776,10 +789,10 @@
             this.initDatabase();
             this.initSession();
 
-            // Periodic auto-check to ensure added elections appear live without reload
+            // Auto-sync polling every 2 seconds
             setInterval(() => {
                 this.checkAndSyncLive();
-            }, 2500);
+            }, 2000);
         }
 
         initDatabase() {
@@ -824,7 +837,7 @@
                     if (newHash !== this.lastPollsHash) {
                         this.db = parsed;
                         this.lastPollsHash = newHash;
-                        if (this.currentView === 'polls' || this.currentView === 'results') {
+                        if (this.currentView === 'polls' || this.currentView === 'results' || this.currentView === 'admin') {
                             this.refreshCurrentView();
                         }
                     }
@@ -858,7 +871,7 @@
                     this.currentUser = { id: 3, name: "Bob Smith", student_id: "STU1002", role: "voter" };
                 }
             } else {
-                // Pre-set Bob Smith so student page is instantly ready to vote!
+                // Pre-set Bob Smith so student page is immediately ready to cast vote!
                 this.currentUser = { id: 3, name: "Bob Smith", student_id: "STU1002", role: "voter" };
                 sessionStorage.setItem('votesphere_session_user', JSON.stringify(this.currentUser));
             }
@@ -868,7 +881,18 @@
 
         updateNavbar() {
             const userActions = document.getElementById('navUserActions');
+            const navAdmin = document.getElementById('nav-item-admin');
+            const navPolls = document.getElementById('nav-link-polls');
+
             if (this.currentUser) {
+                if (this.currentUser.role === 'admin') {
+                    if (navAdmin) navAdmin.style.display = 'block';
+                    if (navPolls) navPolls.innerHTML = '<i class="fa-solid fa-box-archive"></i> Student Voting View';
+                } else {
+                    if (navAdmin) navAdmin.style.display = 'none'; // Students CANNOT see Admin Dashboard
+                    if (navPolls) navPolls.innerHTML = '<i class="fa-solid fa-check-to-slot"></i> Student Voting Page (Cast Only)';
+                }
+
                 userActions.innerHTML = `
                     <div class="user-pill">
                         <i class="fa-regular fa-circle-user"></i>
@@ -880,12 +904,14 @@
                     </button>
                 `;
             } else {
+                if (navAdmin) navAdmin.style.display = 'none';
+                if (navPolls) navPolls.innerHTML = '<i class="fa-solid fa-check-to-slot"></i> Student Voting Page (Cast Only)';
                 userActions.innerHTML = `
                     <button type="button" class="btn btn-outline btn-sm" onclick="app.navigate('login')">
-                        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                        <i class="fa-solid fa-right-to-bracket"></i> Student Sign In
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="app.navigate('register')">
-                        <i class="fa-solid fa-user-plus"></i> Register
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.navigate('admin-login')">
+                        <i class="fa-solid fa-shield-halved"></i> Admin Portal
                     </button>
                 `;
             }
@@ -1021,6 +1047,10 @@
             this.navigate('login');
         }
 
+        /**
+         * Renders the Student Voting Page
+         * Every election added in the Admin Page is shown here TO CAST ONLY!
+         */
         renderPolls() {
             this.loadDatabase();
             const grid = document.getElementById('pollsGrid');
@@ -1028,11 +1058,8 @@
                 grid.innerHTML = `
                     <div class="empty-state-card" style="grid-column: 1/-1;">
                         <i class="fa-solid fa-folder-open empty-icon"></i>
-                        <h3>No Elections Available</h3>
-                        <p>No elections have been scheduled yet. Click <strong>"+ Add Election"</strong> to launch your first election.</p>
-                        <button type="button" class="btn btn-primary" onclick="app.openModal('electionModal')">
-                            <i class="fa-solid fa-plus"></i> Add Election Now
-                        </button>
+                        <h3>No Elections Available Yet</h3>
+                        <p>No elections have been scheduled. Once an admin adds an election in the Admin Page, it will show up here to cast vote.</p>
                     </div>`;
                 return;
             }
@@ -1047,6 +1074,8 @@
                 const candCount = candidates.length;
                 const hasVoted = voterId && this.db.votes.some(v => v.voter_id === voterId && v.poll_id === poll.id);
                 const isNew = idx === 0 && sortedPolls.length > 2;
+
+                const candidateTagsHtml = candidates.map(c => `<span class="candidate-tag"><i class="fa-solid fa-user-tie"></i> ${this.escapeHtml(c.name)}</span>`).join('');
 
                 return `
                 <div class="poll-card ${poll.status === 'closed' ? 'poll-card-closed' : ''}">
@@ -1066,27 +1095,27 @@
                     <div class="poll-meta-list">
                         <div class="poll-meta-item">
                             <i class="fa-solid fa-users"></i>
-                            <span>Candidates on Ballot: <strong>${candCount}</strong></span>
+                            <span>Nominees (${candCount}):</span>
                         </div>
-                        <div class="poll-meta-item">
-                            <i class="fa-regular fa-calendar-check"></i>
-                            <span>Deadline: ${poll.end_time || 'Open'}</span>
+                        <div class="candidate-tag-list">
+                            ${candidateTagsHtml || '<span class="text-muted" style="font-size:0.8rem;">Candidates ready on ballot</span>'}
                         </div>
                     </div>
 
-                    <div class="poll-card-actions">
+                    <!-- PURE CAST VOTE ACTION ONLY -->
+                    <div class="poll-card-actions" style="margin-top:1.25rem;">
                         ${poll.status === 'active' && !hasVoted ? `
                             <button type="button" class="btn btn-primary btn-block" onclick="app.navigate('ballot', ${poll.id})">
                                 <i class="fa-solid fa-check-to-slot"></i> Cast Your Vote
                             </button>
                         ` : hasVoted ? `
-                            <button type="button" class="btn btn-outline btn-block" onclick="app.navigate('results', ${poll.id})">
-                                <i class="fa-solid fa-chart-pie"></i> View Live Results
-                            </button>
+                            <div class="btn btn-success btn-block disabled" style="cursor:default; opacity:0.95;">
+                                <i class="fa-solid fa-circle-check"></i> Vote Cast &bull; Ballot Recorded
+                            </div>
                         ` : `
-                            <button type="button" class="btn btn-secondary btn-block" onclick="app.navigate('results', ${poll.id})">
-                                <i class="fa-solid fa-lock"></i> Poll Closed &bull; View Results
-                            </button>
+                            <div class="btn btn-secondary btn-block disabled" style="cursor:default;">
+                                <i class="fa-solid fa-lock"></i> Election Closed
+                            </div>
                         `}
                     </div>
                 </div>`;
@@ -1105,7 +1134,7 @@
             const voterId = this.currentUser ? this.currentUser.id : null;
             const hasVoted = voterId && this.db.votes.some(v => v.voter_id === voterId && v.poll_id === poll.id);
 
-            // AUTO-SAFEGUARD: If an election has 0 candidates, auto-create two candidates so students can ALWAYS vote!
+            // AUTO-SAFEGUARD: If an election has 0 candidates, auto-create candidates so students can ALWAYS cast vote!
             let candidates = this.db.candidates.filter(c => c.poll_id === poll.id);
             if (candidates.length === 0) {
                 const c1Id = this.db.candidates.length ? Math.max(...this.db.candidates.map(c => c.id)) + 1 : 1;
@@ -1125,13 +1154,8 @@
                         <span class="status-badge status-${poll.status}">${poll.status.toUpperCase()}</span>
                         <h1 class="ballot-title">${this.escapeHtml(poll.title)}</h1>
                         <p class="ballot-dates">
-                            <i class="fa-regular fa-clock"></i> Election Window: ${poll.start_time} &mdash; ${poll.end_time || 'Open'}
+                            <i class="fa-regular fa-clock"></i> Election Schedule: ${poll.start_time} &mdash; ${poll.end_time || 'Open'}
                         </p>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-outline btn-sm" onclick="app.navigate('results', ${poll.id})">
-                            <i class="fa-solid fa-chart-column"></i> Current Results
-                        </button>
                     </div>
                 </div>
                 ${hasVoted ? `
@@ -1142,7 +1166,7 @@
                   (poll.status === 'closed' ? `
                     <div class="alert alert-warning mt-3">
                         <i class="fa-solid fa-lock"></i>
-                        <div><strong>Poll Closed!</strong> Voting has ended for this election. You can review the final tallied results.</div>
+                        <div><strong>Poll Closed!</strong> Voting has ended for this election.</div>
                     </div>` : `
                     <div class="alert alert-info mt-3">
                         <i class="fa-solid fa-circle-info"></i>
@@ -1159,7 +1183,7 @@
                     <div class="card-radio-custom"></div>
                     <div class="candidate-info">
                         <h3 class="candidate-name">${this.escapeHtml(cand.name)}</h3>
-                        <p class="candidate-desc">${this.escapeHtml(cand.description || "No campaign statement provided.")}</p>
+                        <p class="candidate-desc">${this.escapeHtml(cand.description || "Official Campaign Statement")}</p>
                     </div>
                 </label>
             `).join('');
@@ -1195,7 +1219,7 @@
             const alreadyVoted = this.db.votes.some(v => v.voter_id === this.currentUser.id && v.poll_id === this.selectedPollId);
             if (alreadyVoted) {
                 this.showFlash("You have ALREADY voted in this poll. Each voter is allowed only one vote.", "warning");
-                this.navigate('results', this.selectedPollId);
+                this.navigate('polls');
                 return;
             }
 
@@ -1222,7 +1246,9 @@
             this.db.votes.push(newVote);
             this.saveDatabase();
             this.showFlash(`Success! Your vote for '${candidateName}' has been officially recorded.`, "success");
-            this.navigate('results', this.selectedPollId);
+
+            // Return strictly to Student Voting Page showing 'Vote Cast'
+            this.navigate('polls');
         }
 
         renderResults(pollId) {
@@ -1434,23 +1460,23 @@
 
             this.db.polls.push(newPoll);
 
-            // Automatically create candidates so students can IMMEDIATELY vote!
+            // Automatically create candidate nominees so students can immediately cast vote!
             const cand1Name = document.getElementById('new_poll_cand1').value.trim();
             const cand2Name = document.getElementById('new_poll_cand2').value.trim();
 
             const candidatesToAdd = [];
             if (cand1Name) {
-                candidatesToAdd.push({ name: cand1Name, desc: "Official Election Candidate" });
+                candidatesToAdd.push({ name: cand1Name, desc: "Official Nominee" });
             }
             if (cand2Name) {
-                candidatesToAdd.push({ name: cand2Name, desc: "Official Election Candidate" });
+                candidatesToAdd.push({ name: cand2Name, desc: "Official Nominee" });
             }
 
             // Fallback: If no candidate was typed, provide two clear candidates so the ballot is ready immediately
             if (candidatesToAdd.length === 0) {
                 candidatesToAdd.push(
-                    { name: "Candidate 1 (Nominee A)", desc: "Focuses on campus sustainability and student support." },
-                    { name: "Candidate 2 (Nominee B)", desc: "Advocates for improved campus Wi-Fi and student resources." }
+                    { name: "Nominee A", desc: "Student Representative Candidate" },
+                    { name: "Nominee B", desc: "Student Representative Candidate" }
                 );
             }
 
@@ -1470,7 +1496,7 @@
             document.getElementById('new_poll_cand1').value = '';
             document.getElementById('new_poll_cand2').value = '';
 
-            this.showFlash(`Election '${title}' created and is now LIVE for students to cast votes!`, "success");
+            this.showFlash(`Election '${title}' created! It is now live on the Student Page to cast vote.`, "success");
             this.renderAdmin();
             this.renderPolls();
         }

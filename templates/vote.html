@@ -1,185 +1,187 @@
-{% extends "base.html" %}
-
-{% block title %}
-    {% if selected_poll %}
-        Ballot: {{ selected_poll.title }} - Student Portal
-    {% else %}
-        Student Voting Portal - Online Voting System
-    {% endif %}
-{% endblock %}
-
-{% block content %}
-
-{% if not selected_poll %}
-    <!-- ================================================================= -->
-    <!-- VIEW A: ALL AVAILABLE POLLS / ELECTIONS (STUDENT PORTAL)         -->
-    <!-- ================================================================= -->
-    <div class="page-header">
-        <div>
-            <h1 class="page-title"><i class="fa-solid fa-graduation-cap"></i> Student Voting Portal</h1>
-            <p class="page-subtitle">Review active elections, explore candidate platforms, and cast your ballot.</p>
-        </div>
-        <div class="header-action">
-            <span class="badge badge-success"><i class="fa-solid fa-user-graduate"></i> Student Voter</span>
-        </div>
-    </div>
-
-    {% if not polls %}
-        <div class="empty-state-card">
-            <i class="fa-solid fa-folder-open empty-icon"></i>
-            <h3>No Elections Scheduled Yet</h3>
-            <p>An administrator has not opened any campus elections at this moment. Please check back soon.</p>
-        </div>
-    {% else %}
-        <div class="polls-grid">
-            {% for poll in polls %}
-                {% set has_voted = (poll.id in voted_polls_map) %}
-                <div class="poll-card {% if poll.status == 'closed' %}poll-card-closed{% endif %}">
-                    <div class="poll-card-header">
-                        <span class="status-badge status-{{ poll.status }}">
-                            <i class="fa-solid fa-circle status-dot"></i>
-                            {{ poll.status|upper }}
-                        </span>
-                        {% if has_voted %}
-                            <span class="badge badge-success">
-                                <i class="fa-solid fa-check"></i> You Voted
-                            </span>
-                        {% elif poll.status == 'active' %}
-                            <span class="badge badge-warning">
-                                <i class="fa-solid fa-hourglass-half"></i> Vote Pending
-                            </span>
-                        {% endif %}
-                    </div>
-
-                    <h2 class="poll-card-title">{{ poll.title }}</h2>
-
-                    <div class="poll-meta-list">
-                        <div class="poll-meta-item">
-                            <i class="fa-solid fa-users"></i>
-                            <span>Candidates: <strong>{{ candidates_count.get(poll.id, 0) }}</strong></span>
-                        </div>
-                        <div class="poll-meta-item">
-                            <i class="fa-regular fa-calendar-check"></i>
-                            <span>Ends: {{ poll.end_time }}</span>
-                        </div>
-                    </div>
-
-                    <div class="poll-card-actions">
-                        {% if poll.status == 'active' and not has_voted %}
-                            <a href="{{ url_for('cast_vote', poll_id=poll.id) }}" class="btn btn-primary btn-block">
-                                <i class="fa-solid fa-check-to-slot"></i> Cast Your Vote
-                            </a>
-                        {% elif has_voted %}
-                            <a href="{{ url_for('view_results', poll_id=poll.id) }}" class="btn btn-outline btn-block">
-                                <i class="fa-solid fa-chart-pie"></i> View Live Results
-                            </a>
-                        {% else %}
-                            <a href="{{ url_for('view_results', poll_id=poll.id) }}" class="btn btn-secondary btn-block">
-                                <i class="fa-solid fa-lock"></i> Poll Closed &bull; View Results
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-{% else %}
-    <!-- ================================================================= -->
-    <!-- VIEW B: SINGLE ELECTION BALLOT (CANDIDATES & VOTE CASTING)       -->
-    <!-- ================================================================= -->
-    <div class="ballot-wrapper">
-        <div class="ballot-breadcrumb">
-            <a href="{{ url_for('vote_index') }}" class="back-link">
-                <i class="fa-solid fa-arrow-left"></i> Back to all elections
-            </a>
-        </div>
-
-        <div class="ballot-header-card">
-            <div class="ballot-title-row">
-                <div>
-                    <span class="status-badge status-{{ selected_poll.status }}">
-                        {{ selected_poll.status|upper }}
-                    </span>
-                    <h1 class="ballot-title">{{ selected_poll.title }}</h1>
-                    <p class="ballot-dates">
-                        <i class="fa-regular fa-clock"></i> Election Window: {{ selected_poll.start_time }} &mdash; {{ selected_poll.end_time }}
-                    </p>
-                </div>
-                <div class="ballot-actions-right">
-                    <a href="{{ url_for('view_results', poll_id=selected_poll.id) }}" class="btn btn-outline btn-sm">
-                        <i class="fa-solid fa-chart-column"></i> Current Results
-                    </a>
-                </div>
-            </div>
-
-            {% if has_voted %}
-                <div class="alert alert-info mt-3">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <div>
-                        <strong>Ballot Cast!</strong> You have already submitted your vote in this election. In accordance with voting rules, you are permitted only one vote per poll.
-                    </div>
-                </div>
-            {% elif selected_poll.status == 'closed' %}
-                <div class="alert alert-warning mt-3">
-                    <i class="fa-solid fa-lock"></i>
-                    <div>
-                        <strong>Poll Closed!</strong> Voting has ended for this election. You can review the final tallied results.
-                    </div>
-                </div>
-            {% else %}
-                <div class="alert alert-info mt-3">
-                    <i class="fa-solid fa-circle-info"></i>
-                    <div>
-                        <strong>Voting Instructions:</strong> Select your preferred candidate by clicking their card below, then press <strong>"Confirm & Cast Ballot"</strong>. Once recorded, your vote cannot be changed.
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Candidate Ballot Form -->
-        {% if not candidates %}
-            <div class="empty-state-card">
-                <i class="fa-solid fa-user-slash empty-icon"></i>
-                <h3>No Candidates Registered</h3>
-                <p>Candidates have not been published for this election yet. Please check back soon.</p>
-            </div>
-        {% else %}
-            <form action="{{ url_for('cast_vote', poll_id=selected_poll.id) }}" method="POST" id="votingBallotForm">
-                <div class="candidates-grid">
-                    {% for cand in candidates %}
-                        <label class="candidate-radio-card {% if has_voted or selected_poll.status == 'closed' %}disabled{% endif %}" for="cand_{{ cand.id }}">
-                            <input 
-                                type="radio" 
-                                name="candidate_id" 
-                                id="cand_{{ cand.id }}" 
-                                value="{{ cand.id }}"
-                                data-candidate-name="{{ cand.name }}"
-                                {% if has_voted or selected_poll.status == 'closed' %}disabled{% endif %}
-                                required
-                            >
-                            <div class="card-radio-custom"></div>
-                            <div class="candidate-info">
-                                <div class="candidate-avatar">
-                                    <i class="fa-solid fa-user-tie"></i>
-                                </div>
-                                <h3 class="candidate-name">{{ cand.name }}</h3>
-                                <p class="candidate-desc">{{ cand.description or "No campaign statement provided." }}</p>
-                            </div>
-                        </label>
-                    {% endfor %}
-                </div>
-
-                {% if not has_voted and selected_poll.status == 'active' %}
-                    <div class="ballot-submit-bar">
-                        <button type="submit" class="btn btn-primary btn-lg" id="submitVoteBtn">
-                            <i class="fa-solid fa-check-to-slot"></i> Confirm & Cast Ballot
-                        </button>
-                    </div>
-                {% endif %}
-            </form>
-        {% endif %}
-    </div>
-{% endif %}
-
-{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}
+    {% if selected_poll %}
+        Ballot: {{ selected_poll.title }} - Student Portal
+    {% else %}
+        Student Voting Portal - Online Voting System
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if not selected_poll %}
+    <!-- ================================================================= -->
+    <!-- VIEW A: ALL AVAILABLE POLLS / ELECTIONS (STUDENT PORTAL)         -->
+    <!-- ================================================================= -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title"><i class="fa-solid fa-graduation-cap"></i> Student Voting Portal</h1>
+            <p class="page-subtitle">Review active elections, explore candidate platforms, and cast your ballot.</p>
+        </div>
+        <div class="header-action">
+            <span class="badge badge-success"><i class="fa-solid fa-user-graduate"></i> Student Voter</span>
+        </div>
+    </div>
+
+    {% if not polls %}
+        <div class="empty-state-card">
+            <i class="fa-solid fa-folder-open empty-icon"></i>
+            <h3>No Elections Scheduled Yet</h3>
+            <p>An administrator has not opened any campus elections at this moment. Please check back soon.</p>
+        </div>
+    {% else %}
+        <div class="polls-grid">
+            {% for poll in polls %}
+                {% set has_voted = (poll.id in voted_polls_map) %}
+                <div class="poll-card {% if poll.status == 'closed' %}poll-card-closed{% endif %}">
+                    <div class="poll-card-header">
+                        <span class="status-badge status-{{ poll.status }}">
+                            <i class="fa-solid fa-circle status-dot"></i>
+                            {{ poll.status|upper }}
+                        </span>
+                        {% if has_voted %}
+                            <span class="badge badge-success">
+                                <i class="fa-solid fa-check"></i> You Voted
+                            </span>
+                        {% elif poll.status == 'active' %}
+                            <span class="badge badge-warning">
+                                <i class="fa-solid fa-hourglass-half"></i> Vote Pending
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <h2 class="poll-card-title">{{ poll.title }}</h2>
+
+                    <div class="poll-meta-list">
+                        <div class="poll-meta-item">
+                            <i class="fa-solid fa-users"></i>
+                            <span>Nominees ({{ candidates_count.get(poll.id, 0) }}):</span>
+                        </div>
+                        <div class="candidate-tag-list" style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.35rem;">
+                            {% for cand in candidates_by_poll.get(poll.id, []) %}
+                                <span class="badge badge-subtle" style="font-size:0.78rem; padding:0.2rem 0.55rem;">
+                                    <i class="fa-solid fa-user-tie"></i> {{ cand.name }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted" style="font-size:0.8rem;">Candidates ready on ballot</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Strictly Cast Vote Only Action -->
+                    <div class="poll-card-actions" style="margin-top:1.25rem;">
+                        {% if poll.status == 'active' and not has_voted %}
+                            <a href="{{ url_for('cast_vote', poll_id=poll.id) }}" class="btn btn-primary btn-block">
+                                <i class="fa-solid fa-check-to-slot"></i> Cast Your Vote
+                            </a>
+                        {% elif has_voted %}
+                            <div class="btn btn-success btn-block disabled" style="cursor:default; opacity:0.95;">
+                                <i class="fa-solid fa-circle-check"></i> Vote Cast &bull; Ballot Recorded
+                            </div>
+                        {% else %}
+                            <div class="btn btn-secondary btn-block disabled" style="cursor:default;">
+                                <i class="fa-solid fa-lock"></i> Election Closed
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+{% else %}
+    <!-- ================================================================= -->
+    <!-- VIEW B: SINGLE ELECTION BALLOT (CANDIDATES & VOTE CASTING)       -->
+    <!-- ================================================================= -->
+    <div class="ballot-wrapper">
+        <div class="ballot-breadcrumb">
+            <a href="{{ url_for('vote_index') }}" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> Back to all elections
+            </a>
+        </div>
+
+        <div class="ballot-header-card">
+            <div class="ballot-title-row">
+                <div>
+                    <span class="status-badge status-{{ selected_poll.status }}">
+                        {{ selected_poll.status|upper }}
+                    </span>
+                    <h1 class="ballot-title">{{ selected_poll.title }}</h1>
+                    <p class="ballot-dates">
+                        <i class="fa-regular fa-clock"></i> Election Window: {{ selected_poll.start_time }} &mdash; {{ selected_poll.end_time }}
+                    </p>
+                </div>
+
+            </div>
+
+            {% if has_voted %}
+                <div class="alert alert-info mt-3">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <div>
+                        <strong>Ballot Cast!</strong> You have already submitted your vote in this election. In accordance with voting rules, you are permitted only one vote per poll.
+                    </div>
+                </div>
+            {% elif selected_poll.status == 'closed' %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fa-solid fa-lock"></i>
+                    <div>
+                        <strong>Poll Closed!</strong> Voting has ended for this election. You can review the final tallied results.
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-3">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div>
+                        <strong>Voting Instructions:</strong> Select your preferred candidate by clicking their card below, then press <strong>"Confirm & Cast Ballot"</strong>. Once recorded, your vote cannot be changed.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Candidate Ballot Form -->
+        {% if not candidates %}
+            <div class="empty-state-card">
+                <i class="fa-solid fa-user-slash empty-icon"></i>
+                <h3>No Candidates Registered</h3>
+                <p>Candidates have not been published for this election yet. Please check back soon.</p>
+            </div>
+        {% else %}
+            <form action="{{ url_for('cast_vote', poll_id=selected_poll.id) }}" method="POST" id="votingBallotForm">
+                <div class="candidates-grid">
+                    {% for cand in candidates %}
+                        <label class="candidate-radio-card {% if has_voted or selected_poll.status == 'closed' %}disabled{% endif %}" for="cand_{{ cand.id }}">
+                            <input 
+                                type="radio" 
+                                name="candidate_id" 
+                                id="cand_{{ cand.id }}" 
+                                value="{{ cand.id }}"
+                                data-candidate-name="{{ cand.name }}"
+                                {% if has_voted or selected_poll.status == 'closed' %}disabled{% endif %}
+                                required
+                            >
+                            <div class="card-radio-custom"></div>
+                            <div class="candidate-info">
+                                <div class="candidate-avatar">
+                                    <i class="fa-solid fa-user-tie"></i>
+                                </div>
+                                <h3 class="candidate-name">{{ cand.name }}</h3>
+                                <p class="candidate-desc">{{ cand.description or "No campaign statement provided." }}</p>
+                            </div>
+                        </label>
+                    {% endfor %}
+                </div>
+
+                {% if not has_voted and selected_poll.status == 'active' %}
+                    <div class="ballot-submit-bar">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitVoteBtn">
+                            <i class="fa-solid fa-check-to-slot"></i> Confirm & Cast Ballot
+                        </button>
+                    </div>
+                {% endif %}
+            </form>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% endblock %}

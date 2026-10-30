@@ -17,12 +17,17 @@ from flask import (
     session,
     g
 )
+import os
 from werkzeug.security import generate_password_hash, check_password_hash
-from database import get_db
+from database import get_db, DB_PATH, init_db
 
 app = Flask(__name__)
-# Secret key used to encrypt session cookies (in production, keep this secret!)
-app.secret_key = "classroom-demo-secret-key-change-in-production"
+# Secret key used to encrypt session cookies (configurable via SECRET_KEY environment variable)
+app.secret_key = os.environ.get("SECRET_KEY", "classroom-demo-secret-key-change-in-production")
+
+# Ensure SQLite database exists automatically upon startup (e.g. under WSGI/Gunicorn on cloud)
+if not os.path.exists(DB_PATH):
+    init_db(seed_data=True)
 
 
 # ---------------------------------------------------------------------------
@@ -605,19 +610,13 @@ def admin_delete_poll(poll_id):
 # Application Entry Point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Ensure database is present before running
-    import os
-    from database import DB_PATH, init_db
-    if not os.path.exists(DB_PATH):
-        print("Database not found. Initializing now...")
-        init_db(seed_data=True)
-
+    port = int(os.environ.get("PORT", 5000))
     print("\n" + "=" * 60)
     print(" ONLINE VOTING SYSTEM (Classroom Demonstration Project)")
-    print(" Access the application at: http://127.0.0.1:5000")
+    print(f" Access the application at: http://127.0.0.1:{port}")
     print(" Default Admin: ADMIN001 / admin123")
     print(" Default Voter: STU1001 / voter123")
     print("=" * 60 + "\n")
 
-    # Run Flask local development server
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    # Run Flask server (0.0.0.0 allows external cloud routing and port binding)
+    app.run(debug=True, host="0.0.0.0", port=port)

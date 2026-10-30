@@ -233,3 +233,23 @@ All 11 test cases will run and report `OK`.
 - **SQL Injection Prevention**: All SQL queries use parameter placeholders (`?`).
 - **Access Control Decorators**: `@login_required` and `@admin_required` prevent unauthorized access to sensitive pages.
 - **Enforced One-Vote Policy**: Guarded both in Python application logic and with a SQLite `UNIQUE(voter_id, poll_id)` constraint.
+
+---
+
+## ☁️ Free Cloud Deployment Guide (Render.com)
+
+This repository includes `Procfile`, `render.yaml`, and production Gunicorn configurations ready for **1-click free deployment**.
+
+### Steps to Deploy to Render in 2 Minutes:
+1. Go to **[https://render.com](https://render.com)** and sign in with your GitHub account (`sreenivasulus832-debug`).
+2. Click **New +** and select **Web Service**.
+3. Choose **Build and deploy from a Git repository**.
+4. Select your repository: **`sreenivasulus832-debug/project`**.
+5. Render will automatically detect the settings:
+   - **Name**: `online-voting-system`
+   - **Environment**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt && python init_db.py`
+   - **Start Command**: `gunicorn app:app`
+   - **Plan**: `Free`
+6. Click **Deploy Web Service**!
+7. Within 1-2 minutes, Render will build and deploy your app, providing a live public URL (e.g., `https://online-voting-system.onrender.com`) that anyone can open on phone, tablet, or PC to vote!

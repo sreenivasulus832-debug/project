@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Student Sign In - Online Voting System{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <!-- Portal Switch Tabs -->
+        <div class="portal-switch-tabs">
+            <a href="{{ url_for('login') }}" class="portal-tab-btn active">
+                <i class="fa-solid fa-graduation-cap"></i> Student Portal
+            </a>
+            <a href="{{ url_for('admin_login') }}" class="portal-tab-btn">
+                <i class="fa-solid fa-shield-halved"></i> Admin Portal
+            </a>
+        </div>
+
+        <div class="auth-header">
+            <div class="auth-icon-circle">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h2>Student Voter Sign In</h2>
+            <p>Voter & Admin Sign In &bull; Enter your Student ID and password to access the voting portal.</p>
+        </div>
+
+        <form action="{{ url_for('login') }}" method="POST" class="auth-form" id="loginForm">
+            <!-- Student ID -->
+            <div class="form-group">
+                <label for="student_id" class="form-label">Student ID</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-hashtag input-icon"></i>
+                    <input 
+                        type="text" 
+                        id="student_id" 
+                        name="student_id" 
+                        class="form-control" 
+                        placeholder="e.g., STU1001 or STU1002" 
+                        value="{{ student_id or '' }}" 
+                        required 
+                        autofocus
+                    >
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="Your student account password" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Vote
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>New student voter? <a href="{{ url_for('register') }}">Create an account</a></p>
+            <p class="mt-2 text-muted" style="font-size: 0.85rem;">Election supervisor? <a href="{{ url_for('admin_login') }}">Switch to Admin Portal &rarr;</a></p>
+        </div>
+
+        <!-- Quick Demo Accounts for Instant Classroom Testing -->
+        <div class="demo-accounts-card">
+            <div class="demo-header">
+                <i class="fa-solid fa-laptop-code"></i>
+                <span>Student Demo Accounts (Click to Fill)</span>
+            </div>
+            <div class="demo-buttons">
+                <button type="button" class="btn-demo-pill" onclick="fillCredentials('STU1002', 'voter123')">
+                    <span class="pill-role voter-pill">Student</span>
+                    <span class="pill-id">STU1002</span>
+                    <span class="pill-pw">(ready to vote)</span>
+                </button>
+                <button type="button" class="btn-demo-pill" onclick="fillCredentials('STU1001', 'voter123')">
+                    <span class="pill-role voter-pill">Student</span>
+                    <span class="pill-id">STU1001</span>
+                    <span class="pill-pw">(already voted)</span>
+                </button>
+                <a href="{{ url_for('admin_login') }}" class="btn-demo-pill" style="text-decoration:none;">
+                    <span class="pill-role admin-pill">Admin</span>
+                    <span class="pill-id">ADMIN001</span>
+                    <span class="pill-pw">(switch to admin portal &rarr;)</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

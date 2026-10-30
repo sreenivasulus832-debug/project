@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Online Voting System{% endblock %}</title>
+    <!-- Google Fonts for clean typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Header & Navigation -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand">
+                <i class="fa-solid fa-check-to-slot brand-icon"></i>
+                <span class="brand-text">VoteSphere</span>
+                {% if session.get('role') == 'admin' %}
+                    <span class="badge badge-admin"><i class="fa-solid fa-shield-halved"></i> Admin Portal</span>
+                {% elif session.get('role') == 'voter' %}
+                    <span class="badge badge-success"><i class="fa-solid fa-graduation-cap"></i> Student Portal</span>
+                {% else %}
+                    <span class="badge badge-subtle">Online Voting</span>
+                {% endif %}
+            </a>
+
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <nav class="nav-menu" id="navMenu">
+                <ul class="nav-links">
+                    {% if session.get('role') == 'admin' %}
+                        <!-- ADMIN SPECIFIC NAV LINKS -->
+                        <li>
+                            <a href="{{ url_for('admin_dashboard') }}" class="nav-link nav-link-admin {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                                <i class="fa-solid fa-shield-halved"></i> Admin Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('view_results') }}" class="nav-link {% if request.endpoint == 'view_results' %}active{% endif %}">
+                                <i class="fa-solid fa-chart-simple"></i> Live Tallies
+                            </a>
+                        </li>
+                    {% elif session.get('role') == 'voter' %}
+                        <!-- STUDENT SPECIFIC NAV LINKS -->
+                        <li>
+                            <a href="{{ url_for('vote_index') }}" class="nav-link {% if request.endpoint in ['vote_index', 'cast_vote'] %}active{% endif %}">
+                                <i class="fa-solid fa-graduation-cap"></i> My Ballots
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('view_results') }}" class="nav-link {% if request.endpoint == 'view_results' %}active{% endif %}">
+                                <i class="fa-solid fa-chart-simple"></i> Live Results
+                            </a>
+                        </li>
+                    {% else %}
+                        <!-- PUBLIC / GUEST NAV LINKS -->
+                        <li>
+                            <a href="{{ url_for('login') }}" class="nav-link {% if request.endpoint in ['login', 'vote_index'] %}active{% endif %}">
+                                <i class="fa-solid fa-graduation-cap"></i> Student Portal
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('admin_login') }}" class="nav-link nav-link-admin {% if request.endpoint == 'admin_login' %}active{% endif %}">
+                                <i class="fa-solid fa-shield-halved"></i> Admin Portal
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('view_results') }}" class="nav-link {% if request.endpoint == 'view_results' %}active{% endif %}">
+                                <i class="fa-solid fa-chart-simple"></i> Live Results
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <div class="nav-user-actions">
+                    {% if session.get('user_id') %}
+                        <div class="user-pill {% if session.get('role') == 'admin' %}user-pill-admin{% else %}user-pill-student{% endif %}">
+                            <i class="{% if session.get('role') == 'admin' %}fa-solid fa-user-shield{% else %}fa-solid fa-user-graduate{% endif %}"></i>
+                            <span class="user-name">{{ session.get('name') }}</span>
+                            <span class="role-badge role-{{ session.get('role') }}">
+                                {% if session.get('role') == 'admin' %}Administrator{% else %}Student Voter{% endif %}
+                            </span>
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm">
+                            <i class="fa-solid fa-graduation-cap"></i> Student Sign In
+                        </a>
+                        <a href="{{ url_for('admin_login') }}" class="btn btn-dark btn-sm">
+                            <i class="fa-solid fa-shield-halved"></i> Admin Sign In
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Flash Messages Notification Container -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-container" id="flashContainer">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <div class="alert-icon">
+                                    {% if category == 'success' %}
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    {% elif category == 'danger' %}
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-circle-info"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="alert-message">{{ message }}</div>
+                                <button type="button" class="alert-close" onclick="this.parentElement.remove()" aria-label="Close notification">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Dynamic Child Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer with Mandatory Classroom Project Disclaimer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-info">
+                <p class="project-title"><strong>Online Voting System</strong> &mdash; Full-Stack Educational Mini Project</p>
+                <p class="tech-stack">Built with Python Flask &bull; SQLite &bull; Vanilla HTML, CSS, JavaScript</p>
+            </div>
+            <div class="disclaimer-box">
+                <i class="fa-solid fa-scale-balanced disclaimer-icon"></i>
+                <p><strong>Notice:</strong> This is a classroom demonstration project only, not a system for real elections. It does not provide the cryptographic security, anonymous privacy, voter secrecy, or auditing required for high-stakes public or legal elections.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Election Results - Online Voting System{% endblock %}
+
+{% block content %}
+<div class="results-page">
+    <div class="page-header results-header">
+        <div>
+            <h1 class="page-title"><i class="fa-solid fa-chart-column"></i> Election Results</h1>
+            <p class="page-subtitle">Real-time vote tallies and candidate standing across campus elections.</p>
+        </div>
+
+        <!-- Poll Selector Dropdown -->
+        {% if polls %}
+            <div class="poll-selector-wrapper">
+                <label for="pollSelect" class="form-label mb-1">Select Election:</label>
+                <select id="pollSelect" class="form-control poll-select" onchange="window.location.href='/results/' + this.value">
+                    {% for poll in polls %}
+                        <option value="{{ poll.id }}" {% if selected_poll and selected_poll.id == poll.id %}selected{% endif %}>
+                            {{ poll.title }} ({{ poll.status|capitalize }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if not selected_poll %}
+        <div class="empty-state-card">
+            <i class="fa-solid fa-chart-pie empty-icon"></i>
+            <h3>No Results to Display</h3>
+            <p>No active or completed polls were found in the database.</p>
+        </div>
+    {% else %}
+        <!-- Poll Highlights & Quick Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-blue">
+                    <i class="fa-solid fa-square-poll-vertical"></i>
+                </div>
+                <div class="stat-details">
+                    <span class="stat-label">Election Title</span>
+                    <h3 class="stat-value-text">{{ selected_poll.title }}</h3>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon icon-green">
+                    <i class="fa-solid fa-check-double"></i>
+                </div>
+                <div class="stat-details">
+                    <span class="stat-label">Total Ballots Cast</span>
+                    <h3 class="stat-value">{{ total_votes }}</h3>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon icon-amber">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div class="stat-details">
+                    <span class="stat-label">Status</span>
+                    <h3 class="stat-value-text">
+                        <span class="status-badge status-{{ selected_poll.status }}">
+                            {{ selected_poll.status|upper }}
+                        </span>
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Candidate Tally Cards -->
+        <div class="results-card">
+            <div class="results-card-header">
+                <h2>Candidate Standings</h2>
+                <span class="text-muted">Total: {{ total_votes }} vote{% if total_votes != 1 %}s{% endif %}</span>
+            </div>
+
+            {% if not results %}
+                <div class="p-4 text-center text-muted">
+                    <p>No candidates are listed for this election.</p>
+                </div>
+            {% else %}
+                <div class="results-list">
+                    {% for cand in results %}
+                        <div class="result-item {% if cand.is_leader %}leader-item{% endif %}">
+                            <div class="result-item-header">
+                                <div class="candidate-headline">
+                                    <span class="rank-badge">#{{ loop.index }}</span>
+                                    <div>
+                                        <h3 class="result-candidate-name">
+                                            {{ cand.name }}
+                                            {% if cand.is_leader and cand.vote_count > 0 %}
+                                                <span class="leader-badge">
+                                                    <i class="fa-solid fa-crown"></i> 
+                                                    {% if selected_poll.status == 'closed' %}Winner{% else %}Current Leader{% endif %}
+                                                </span>
+                                            {% endif %}
+                                        </h3>
+                                        <p class="result-candidate-desc">{{ cand.description or "No description provided." }}</p>
+                                    </div>
+                                </div>
+                                <div class="tally-score">
+                                    <span class="vote-count-number">{{ cand.vote_count }}</span>
+                                    <span class="vote-count-label">vote{% if cand.vote_count != 1 %}s{% endif %}</span>
+                                    <span class="vote-percentage">({{ cand.percentage }}%)</span>
+                                </div>
+                            </div>
+
+                            <!-- Visual Percentage Progress Bar -->
+                            <div class="progress-bar-container">
+                                <div 
+                                    class="progress-bar-fill {% if cand.is_leader and cand.vote_count > 0 %}fill-leader{% endif %}" 
+                                    style="width: {{ cand.percentage }}%;"
+                                    aria-valuenow="{{ cand.percentage }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100"
+                                ></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="results-footer-bar">
+            {% if session.get('user_id') and selected_poll.status == 'active' %}
+                <a href="{{ url_for('cast_vote', poll_id=selected_poll.id) }}" class="btn btn-primary">
+                    <i class="fa-solid fa-check-to-slot"></i> Go to Ballot
+                </a>
+            {% endif %}
+            <a href="{{ url_for('vote_index') }}" class="btn btn-outline">
+                <i class="fa-solid fa-arrow-left"></i> View All Elections
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

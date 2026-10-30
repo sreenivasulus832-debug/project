@@ -1,0 +1,4 @@
+# Project dependencies for Online Voting System
+# Compatible with Python 3.7+ and Python 3.8+
+Flask>=2.0.0,<2.3.0
+Werkzeug>=2.0.0,<3.0.0

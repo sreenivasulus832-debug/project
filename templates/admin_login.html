@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Sign In - Online Voting System{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card auth-card-admin">
+        <!-- Portal Switch Tabs -->
+        <div class="portal-switch-tabs">
+            <a href="{{ url_for('login') }}" class="portal-tab-btn">
+                <i class="fa-solid fa-graduation-cap"></i> Student Portal
+            </a>
+            <a href="{{ url_for('admin_login') }}" class="portal-tab-btn active admin-active">
+                <i class="fa-solid fa-shield-halved"></i> Admin Portal
+            </a>
+        </div>
+
+        <div class="auth-header">
+            <div class="auth-icon-circle auth-icon-admin">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2>Administrator Portal</h2>
+            <p>Restricted access for election supervisors & staff.</p>
+        </div>
+
+        <form action="{{ url_for('admin_login') }}" method="POST" class="auth-form" id="adminLoginForm">
+            <!-- Admin ID -->
+            <div class="form-group">
+                <label for="admin_id" class="form-label">Administrator ID</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-hashtag input-icon"></i>
+                    <input 
+                        type="text" 
+                        id="admin_id" 
+                        name="student_id" 
+                        class="form-control" 
+                        placeholder="e.g., ADMIN001" 
+                        value="{{ student_id or '' }}" 
+                        required 
+                        autofocus
+                    >
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="admin_password" class="form-label">Password</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input 
+                        type="password" 
+                        id="admin_password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="Your administrator password" 
+                        required
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-dark btn-block">
+                <i class="fa-solid fa-lock-open"></i> Sign In to Admin Portal
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p><a href="{{ url_for('login') }}"><i class="fa-solid fa-arrow-left"></i> Switch to Student Voter Portal</a></p>
+        </div>
+
+        <!-- Quick Demo Credentials -->
+        <div class="demo-accounts-card">
+            <div class="demo-header">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Admin Demo Credentials (Click to Fill)</span>
+            </div>
+            <div class="demo-buttons">
+                <button type="button" class="btn-demo-pill" onclick="fillAdminCredentials('ADMIN001', 'admin123')">
+                    <span class="pill-role admin-pill">Admin</span>
+                    <span class="pill-id">ADMIN001</span>
+                    <span class="pill-pw">(admin123)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
